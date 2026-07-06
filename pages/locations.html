@@ -1,0 +1,100 @@
+<!-- 
+===========================
+map implimentation log
+===========================
+
+1. Installed and configured BlueMap CLI
+   - Downloaded bluemap-cli.jar and ensured Java was installed.
+   - Verified the CLI could run and access configuration files.
+
+2. Prepared the Minecraft world for rendering
+   - Placed the world folder where BlueMap could read region data.
+   - Ensured BlueMap had access to block, biome, and heightmap files.
+
+3. Configured a custom render-mask (2048x2048)
+   - Edited the map config to limit rendering to a 2048x2048 area.
+   - Used:
+       min-x: -1024
+       max-x: 1024
+       min-z: -1024
+       max-z: 1024
+   - This optimized performance and reduced render time.
+
+4. Rendered the map
+   - Ran: java -jar bluemap-cli.jar -r
+   - Generated the full /web/ viewer folder including:
+       index.html
+       assets/
+       maps/
+       data/
+
+5. Added custom POIs (Points of Interest)
+   - Created a marker-set in the config.
+   - Added coordinates, labels, and categories for volcanic locations.
+
+6. Added custom flame icons (depreciated)
+   - Created /assets/icons/ directory.
+   - Added flame.png and set:
+       icon: "assets/icons/flame.png"
+       icon-size: 24
+
+7. Hosted BlueMap using the built-in server
+   - Used: java -jar bluemap-cli.jar -w
+   - This served the map correctly on a local port (e.g., 8100).
+   - Required because BlueMap needs proper worker + JSON routing.
+
+8. Embedded BlueMap into the website
+   - Added an iframe to locations.html:
+       <iframe src="http://localhost:8100/" ... ></iframe>
+   - This displayed the interactive 3D map inside the site.
+
+9. Updated SPA router to avoid blocking BlueMap
+   - Added a rule so the router does NOT intercept BlueMap paths:
+       if (path.startsWith("/public/bluemap")) return;
+   - Prevented the SPA from rewriting BlueMap URLs.
+
+10. Made the setup portable
+   - Organized BlueMap into:
+       bluemap-cli.jar
+       configs/
+       web/
+   - Only need the world folder again if re-rendering.
+   - Can run the server on any computer with Java.
+
+SUMMARY:
+Successfully integrated a fully interactive 3D map into the website by:
+- Rendering a custom region
+- Adding POIs and icons
+- Hosting via BlueMap’s server
+- Embedding with an iframe
+- Configuring SPA routing
+- Making the setup portable
+
+help me - i am 17 hours into implimentation. 
+-->
+
+
+
+<h1 class="center-title fade-in">LOCATIONS &amp; POIs</h1>
+
+<p class="season-intro fade-in">
+    Explore the world of Popularis in full 3D. Pan, zoom, and fly across the islands
+    to find every point of interest.
+</p>
+
+<div class="season-summary fade-in map-frame">
+<iframe
+    src="http://localhost:8100/"
+    title="Interactive 3D map of Popularis"
+    style="width:100%; height:640px; border:none; border-radius:12px; background:rgba(0,0,0,0.4);"
+></iframe>
+
+<p class="setting-hint" style="text-align:center; margin-top:12px;">
+    Map offline? Start it with <strong>java -jar bluemap-cli.jar -w</strong> inside the MAP-RENDER folder.
+</p>
+</div>
+
+<!-- run: java -jar bluemap-cli.jar -w
+
+in the dir of map renderer (shift+r click) in terminal
+requires version java 26 (latest) to run!!! -->

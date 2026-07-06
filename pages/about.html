@@ -1,0 +1,150 @@
+<!--This should be home, but the filename is so embedded in my code it's too much of a hastle-->
+<div class="fade-in home-scroll">
+
+    <!-- --------------------------------------------------
+         SIDE CAR — sticky section navigation
+    -------------------------------------------------- -->
+    <nav class="scroll-rail" aria-label="Home sections">
+        <div class="rail-inner">
+            <button class="rail-dot active" data-target="s-hero"  data-label="Welcome"></button>
+            <button class="rail-dot"        data-target="s-lore"  data-label="The World"></button>
+            <button class="rail-dot"        data-target="s-seasons" data-label="Seasons"></button>
+            <button class="rail-dot"        data-target="s-players" data-label="Players"></button>
+            <button class="rail-dot"        data-target="s-abilities" data-label="Abilities"></button>
+            <button class="rail-dot"        data-target="s-locations" data-label="Locations"></button>
+            <button class="rail-dot"        data-target="s-items" data-label="Items"></button>
+        </div>
+    </nav>
+
+    <!-- --------------------------------------------------
+         HERO PANEL
+    -------------------------------------------------- -->
+    <section class="scroll-panel hero-panel" id="s-hero">
+        <div class="hero">
+            <div class="hero-kicker">&#10022; The Official Wiki &#10022;</div>
+            <h1 class="hero-title">POPULARIS</h1>
+            <p class="hero-tagline">The multi-season Minecraft event.</p>
+            <p class="hero-sub">
+                Custom abilities, handcrafted islands, unique dungeons, riddles, deep lore,
+                and a player-driven story where every season reshapes the world.
+            </p>
+
+            <div class="hero-quotes">
+                <div class="quote-card">
+                    <p>"Two Titans shaped the world. One of them broke it."</p>
+                    <span>&mdash; The Sundering</span>
+                </div>
+                <div class="quote-card">
+                    <p>"Seven days behind the wall. Three lives after it."</p>
+                    <span>&mdash; Season 2</span>
+                </div>
+            </div>
+
+            <div class="hero-actions">
+                <div class="btn btn-primary" data-page="seasons">Begin Your Journey</div>
+                <div class="btn btn-secondary" data-page="lore">Read The Lore</div>
+            </div>
+
+            <div class="stat-strip">
+                <div class="stat"><b>17</b><span>Players</span></div>
+                <div class="stat"><b>3</b><span>Seasons</span></div>
+                <div class="stat"><b>2</b><span>Titans</span></div>
+                <div class="stat"><b>15+</b><span>Locations</span></div>
+            </div>
+
+            <div class="scroll-cue" aria-hidden="true">
+                <span>Scroll to explore</span>
+                <div class="scroll-cue-arrow">&#9662;</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- --------------------------------------------------
+         STORY PANELS  (parallax image backgrounds)
+    -------------------------------------------------- -->
+
+    <section class="scroll-panel story-panel panel-left" id="s-lore">
+        <div class="scroll-panel-bg" style="background-image:url('images/explore_lore.png')"></div>
+        <div class="scroll-panel-inner">
+            <div class="panel-eyebrow">The World</div>
+            <h2>Two Titans, One Broken World</h2>
+            <p>
+                Ignivar, Titan of Flame, and Verdantis, Titan of Life, shaped everything
+                together &mdash; until corruption tore them apart. The Sundering split the
+                land into two islands scarred by non-Euclidean anomalies.
+            </p>
+            <button class="btn btn-secondary panel-btn" data-page="lore">Read the Lore &rarr;</button>
+        </div>
+    </section>
+
+    <section class="scroll-panel story-panel panel-right" id="s-seasons">
+        <div class="scroll-panel-bg" style="background-image:url('images/explore_seasons.png')"></div>
+        <div class="scroll-panel-inner">
+            <div class="panel-eyebrow">The Event</div>
+            <h2>A World That Reshapes Each Season</h2>
+            <p>
+                Every season introduces new mechanics, new worlds, and new twists. Season 1
+                laid the foundation; Season 2 raised the Great Divide and the Titans' war;
+                Season 3 is on the horizon.
+            </p>
+            <button class="btn btn-secondary panel-btn" data-page="seasons">Explore Seasons &rarr;</button>
+        </div>
+    </section>
+
+    <section class="scroll-panel story-panel panel-left" id="s-players">
+        <div class="scroll-panel-bg" style="background-image:url('images/explore_players.png')"></div>
+        <div class="scroll-panel-inner">
+            <div class="panel-eyebrow">The Cast</div>
+            <h2>Every Story Starts With a Player</h2>
+            <p>
+                Popularis is built by the people who play it &mdash; strategists, chaos-bringers,
+                villains and legends. Explore each player, their abilities, and the moments that
+                defined them, complete with a 3D model of their skin.
+            </p>
+            <button class="btn btn-secondary panel-btn" data-page="players">Meet the Players &rarr;</button>
+        </div>
+    </section>
+
+    <section class="scroll-panel story-panel panel-right" id="s-abilities">
+        <div class="scroll-panel-bg" style="background-image:url('images/explore_abilities.png')"></div>
+        <div class="scroll-panel-inner">
+            <div class="panel-eyebrow">Powers</div>
+            <h2>Unique Abilities, Earned &mdash; Not Given</h2>
+            <p>
+                Flight, invincibility, ability-theft, summoned golems, a flame sword of doom.
+                Each power is tied to a quest, an origin, or a Titan-forged relic hidden across
+                the islands.
+            </p>
+            <button class="btn btn-secondary panel-btn" data-page="abilities">See Abilities &rarr;</button>
+        </div>
+    </section>
+
+    <section class="scroll-panel story-panel panel-left" id="s-locations">
+        <div class="scroll-panel-bg" style="background-image:url('images/explore_locations.png')"></div>
+        <div class="scroll-panel-inner">
+            <div class="panel-eyebrow">The Map</div>
+            <h2>Handcrafted Islands to Explore</h2>
+            <p>
+                The Magma Forge, the Obsidian Spine, the Ashen Colosseum, the Whispering
+                Waterfall &mdash; and looping bridges that fold space itself. Pan across the
+                whole world in the interactive 3D map.
+            </p>
+            <button class="btn btn-secondary panel-btn" data-page="locations">Open the Map &rarr;</button>
+        </div>
+    </section>
+
+    <section class="scroll-panel story-panel panel-right" id="s-items">
+        <div class="scroll-panel-bg" style="background-image:url('images/explore_items.png')"></div>
+        <div class="scroll-panel-inner">
+            <div class="panel-eyebrow">Relics</div>
+            <h2>Legendary, Titan-Forged Items</h2>
+            <p>
+                Ignivar's Gauntlet, the Bloodmoon Bow, the Wings of the Ironclad. The rarest
+                tools in Popularis, each bound to a story, a trial, and the history of the
+                Sundering.
+            </p>
+            <button class="btn btn-secondary panel-btn" data-page="items">View Legendary Items &rarr;</button>
+        </div>
+    </section>
+
+</div>

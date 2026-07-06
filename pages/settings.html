@@ -1,0 +1,113 @@
+<h1 class="center-title fade-in">SETTINGS</h1>
+
+<p class="season-intro fade-in">
+    Adjust how the Popularis Wiki looks and behaves.
+    Your choices are saved on this device.
+</p>
+
+<div class="season-summary fade-in">
+    <h2>Appearance</h2>
+
+    <div class="setting-row">
+        <span>Easy Reading Mode
+            <em class="setting-hint">Darkens the content card for higher contrast</em>
+        </span>
+        <input type="checkbox" id="easy-reading-toggle">
+    </div>
+
+    <div class="setting-row" id="opacity-row">
+        <span>Background Opacity
+            <em class="setting-hint">How solid the card is in Easy Reading Mode</em>
+        </span>
+        <input type="range" id="setting-opacity" min="0.4" max="1" step="0.01">
+    </div>
+
+    <div class="setting-row">
+        <span>Font Size
+            <em class="setting-hint">Scales all wiki text</em>
+        </span>
+        <select id="font-size-setting">
+            <option value="small">Small</option>
+            <option value="normal" selected>Normal</option>
+            <option value="large">Large</option>
+        </select>
+    </div>
+</div>
+
+<div class="season-summary fade-in">
+    <h2>Background &amp; Motion</h2>
+
+    <div class="setting-row">
+        <span>Background Shader
+            <em class="setting-hint">The animated Balatro-style backdrop</em>
+        </span>
+        <input type="checkbox" id="setting-shader">
+    </div>
+
+    <div class="setting-row">
+        <span>Pause Background Shader
+            <em class="setting-hint">Smoothly slows the swirl to a near-stop</em>
+        </span>
+        <input type="checkbox" id="setting-pause-shader">
+    </div>
+
+    <div class="setting-row">
+        <span>Pixel Grid Overlay
+            <em class="setting-hint">Subtle retro scanline texture</em>
+        </span>
+        <input type="checkbox" id="setting-grid">
+    </div>
+
+    <div class="setting-row">
+        <span>Ambient Particles
+            <em class="setting-hint">Drifting embers coloured to the page theme</em>
+        </span>
+        <input type="checkbox" id="setting-particles">
+    </div>
+
+    <div class="setting-row">
+        <span>Particle Visibility
+            <em class="setting-hint">How many embers and how bright they are</em>
+        </span>
+        <input type="range" id="setting-particle-amount" min="0" max="1" step="0.05">
+    </div>
+
+    <div class="setting-row">
+        <span>Reduce Motion
+            <em class="setting-hint">Minimises animations and transitions</em>
+        </span>
+        <input type="checkbox" id="setting-reduce-motion">
+    </div>
+</div>
+
+<div class="season-summary fade-in">
+    <h2>Reading</h2>
+
+    <div class="setting-row">
+        <span>Reading Progress Bar
+            <em class="setting-hint">Shows how far down a page you are</em>
+        </span>
+        <input type="checkbox" id="setting-progress">
+    </div>
+
+    <div class="setting-row">
+        <span>Wiki Links
+            <em class="setting-hint">Auto-link key names, places and items in text</em>
+        </span>
+        <input type="checkbox" id="setting-wikilinks">
+    </div>
+</div>
+
+<div class="season-summary fade-in">
+    <h2>Manage</h2>
+
+    <div class="setting-row">
+        <span>Save your current preferences</span>
+        <button id="save-settings">Save Settings</button>
+    </div>
+
+    <div class="setting-row">
+        <span>Restore everything to how it started</span>
+        <button id="reset-settings">Reset to Defaults</button>
+    </div>
+</div>

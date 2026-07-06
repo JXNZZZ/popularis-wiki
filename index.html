@@ -1,0 +1,160 @@
+<!-- welcome to my funhouse
+|
+|    MAKE SURE YOU USE THE LIVE SERVER EXTENSION TO RUN THIS WEBSITE OR IT WILL NOT LOAD PROPERLY
+-------------------------------------------------------------------------------------------------
+|    >>R-Click on index.html and select 'run with live server'
+|    -OR-
+|    Press (alt+L+alt+O)<<
+|
+-->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="The official Popularis Wiki — seasons, players, abilities, lore, locations and legendary items of the Popularis Minecraft event.">
+    <meta name="theme-color" content="#0b0812">
+    <title>Popularis Wiki</title>
+    <link rel="icon" href="images/favicon.png" alt="favicon">
+
+    <!-- Open Graph / social share cards -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Popularis Wiki">
+    <meta property="og:title" content="Popularis Wiki">
+    <meta property="og:description" content="The official wiki for Popularis — a multi-season Minecraft event of custom abilities, handcrafted islands, riddles and deep lore.">
+    <meta property="og:image" content="images/wiki_title.png">
+    <meta property="og:url" content="https://popularis.wiki/">
+
+    <!-- Twitter / X card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Popularis Wiki">
+    <meta name="twitter:description" content="Seasons, players, abilities, lore, locations and legendary items of the Popularis Minecraft event.">
+    <meta name="twitter:image" content="images/wiki_title.png">
+
+    <link rel="preload" href="fonts/balatro.ttf" as="font" type="font/ttf" crossorigin>
+    <script>window.WIKI_ASSET_VERSION = "17";</script>
+    <link rel="stylesheet" href="styles.css?v=17">
+</head>
+
+<body class="">
+    <script src="https://unpkg.com/skinview3d"></script>
+
+    <!-- reading progress bar -->
+    <div id="reading-progress"><div id="reading-progress-fill"></div></div>
+
+    <!-- ==============================================
+         LOADING SCREEN
+    =============================================== -->
+    <div id="loading-screen" aria-hidden="true">
+        <div class="loading-inner">
+            <img src="images/wiki_title.png" class="loading-logo" alt="Popularis Wiki">
+            <div class="loading-bar">
+                <div class="loading-bar-fill" id="loading-bar-fill"></div>
+            </div>
+            <div class="loading-tip" id="loading-tip">Launching GCP API&hellip;</div>
+        </div>
+        <div class="loading-corner tl"></div>
+        <div class="loading-corner tr"></div>
+        <div class="loading-corner bl"></div>
+        <div class="loading-corner br"></div>
+    </div>
+
+    <div id="loader"></div>
+
+    <div class="content-box" id="content-box">
+
+        <div class="page-header">
+            <div class="page-brand">
+                <div class="page-title-group">
+                    <div id="breadcrumbs">Popularis</div>
+                    <h1 id="page-title" class="wiki-title">Home</h1>
+                </div>
+            </div>
+
+            <div id="search-bar">
+                <input id="search-input" type="search" placeholder="Search Popularis Wiki..." aria-label="Search wiki pages">
+                <div id="search-results" class="search-results"></div>
+            </div>
+        </div>
+
+        <nav>
+            <div id="logo-wrapper">
+                <div id="logo-tilt">
+                    <img src="images/wiki_title.png" id="nav-logo" alt="wiki logo">
+                </div>
+            </div>
+
+            <ul class="fade-in">
+                <li><a data-page="about">Home</a></li>
+                <li><a data-page="seasons">Seasons</a></li>
+                <li><a data-page="players">Players</a></li>
+                <li><a data-page="settings">Options</a></li>
+            </ul>
+
+            <div id="nav-slider"></div>
+        </nav>
+
+        <div id="content"></div>
+
+        <footer id="site-footer">
+            <div class="footer-main">
+                <div class="footer-brand">
+                    <img src="images/wiki_title.png" alt="Popularis Wiki" class="footer-logo">
+                    <p>The community wiki for <strong>Popularis</strong> — a multi-season Minecraft event of custom abilities, handcrafted islands, riddles and deep lore.</p>
+                </div>
+
+                <div class="footer-cols">
+                    <nav class="footer-col">
+                        <h4>Browse</h4>
+                        <a data-page="about">Home</a>
+                        <a data-page="seasons">Seasons</a>
+                        <a data-page="players">Players</a>
+                        <a data-page="lore">Lore</a>
+                        <a data-page="credits">Credits</a>
+                    </nav>
+                    <nav class="footer-col">
+                        <h4>World</h4>
+                        <a data-page="abilities">Abilities</a>
+                        <a data-page="items">Legendary Items</a>
+                        <a data-page="locations">Locations</a>
+                    </nav>
+                    <nav class="footer-col">
+                        <h4>Seasons</h4>
+                        <a data-page="season1">Season 1</a>
+                        <a data-page="season2">Season 2</a>
+                        <a data-page="season3">Season 3</a>
+                    </nav>
+                </div>
+            </div>
+
+            <div class="footer-bar">
+                <span class="footer-copy">&copy; 2026 Popularis &middot; Wiki v1.0</span>
+                <span id="footer-updated">Last updated &mdash;</span>
+                <button id="footer-top" type="button">&#9650; Back to top</button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- back to top -->
+    <button id="back-to-top" title="Back to top" aria-label="Back to top">&#9650;</button>
+
+    <button id="editor-btn">Editor</button>
+    <div id="editor-toolbar" class="toolbar-card">
+        <button data-cmd="bold"><b>B</b></button>
+        <button data-cmd="italic"><i>I</i></button>
+        <button data-cmd="underline"><u>U</u></button>
+        <button data-cmd="h1">H1</button>
+        <button data-cmd="ul">• List</button>
+        <button data-cmd="link">Link</button>
+    </div>
+
+    <script src="polish.js?v=17"></script>
+    <script src="backgroundshader.js?v=5"></script>
+    <script src="wikidata.js?v=16"></script>
+    <script src="router.js?v=16"></script>
+    <script src="wiki-features.js?v=16"></script>
+    <script src="extras.js?v=17"></script>
+    <script src="libs/skinview3d.bundle.js"></script>
+</body>
+</html>

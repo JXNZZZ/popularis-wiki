@@ -1,0 +1,12 @@
+# BlueMap render data & duplicate web export — huge (800MB+) and the
+# interactive map only works via a locally-run java server anyway.
+# See pages/locations.html for the "map offline" fallback message.
+MAP-RENDER/
+public/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+
+# local Claude Code tool config — not part of the site
+.claude/

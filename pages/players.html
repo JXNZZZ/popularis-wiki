@@ -1,0 +1,108 @@
+<h1 class="center-title fade-in">PLAYERS</h1>
+
+<p class="season-intro fade-in">
+    Welcome to the Popularis Players Portal. This is where every story begins. Explore the people
+    who shaped each season, discover their abilities, their lore, and the chaos they brought into
+    the world of Popularis.
+</p>
+
+<div id="player-layout" class="fade-in">
+
+    <!-- LEFT COLUMN -->
+    <div id="player-info-column">
+        <div id="player-info">
+
+            <h2>About the Players</h2>
+
+            <p>
+                Popularis is built by the people who play it. Every season brings new personalities,
+                new rivalries, new disasters, and new legends. Some players are strategic. Some are
+                chaotic. Some are villains without meaning to be. Others are villains on purpose.
+            </p>
+
+            <p>
+                This portal lets you explore each player in detail. You can learn about their strengths,
+                their past, their best moments, and the strange details that make them who they are.
+                Each page also includes a 3D model of their skin so you can see them exactly as they
+                appear in the world.
+            </p>
+
+            <hr class="section-divider">
+
+            <section class="player-section" id="portal-how">
+                <h3>How This Works</h3>
+                <ul>
+                    <li>Select any player from the bottom navigation.</li>
+                    <li>Each player page includes their overview, abilities, lore, highlights, stats, and trivia.</li>
+                    <li>The sidebar on each page helps you jump between sections easily.</li>
+                    <li>The 3D skin viewer shows their in game appearance.</li>
+                </ul>
+            </section>
+
+            <hr class="section-divider">
+
+            <section class="player-section" id="portal-start">
+                <h3>Who Will You Explore First</h3>
+                <p>
+                    Whether you want to learn about the strongest fighters, the quietest villains,
+                    the builders, the explorers, or the people who have not actually played yet,
+                    every story starts here.
+                </p>
+            </section>
+
+            <hr class="section-divider">
+
+            <p style="text-align:center; margin-top:30px; opacity:0.7;">
+                Popularis Wiki: documenting the world, the players, and the story.
+            </p>
+
+        </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div id="player-sidebar-column">
+
+        <!-- SKIN VIEWER BOX -->
+        <canvas id="skin-canvas" width="300" height="300"></canvas>
+
+        <div class="sticky-spacer"></div>
+
+        <!-- Sidebar box with REAL buttons -->
+        <div id="player-sidebar">
+            <div class="sidebar-title">PLAYERS</div>
+            <ul>
+                <li data-target="portal-how">How This Works</li>
+                <li data-target="portal-start">Where To Begin</li>
+                <li data-target="player-bottom-nav">Player List</li>
+            </ul>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- BOTTOM NAV -->
+<div id="player-bottom-nav">
+    <div id="player-bottom-nav-collapsed-label">All Players</div>
+
+    <div id="player-bottom-nav-inner">
+        <span class="player-nav-item" data-player="people-adam">Adam</span>
+        <span class="player-nav-item" data-player="people-callan">Callan</span>
+        <span class="player-nav-item" data-player="people-danny">Danny</span>
+        <span class="player-nav-item" data-player="people-feidhlim">Feidhlim</span>
+        <span class="player-nav-item" data-player="people-felix">Felix</span>
+        <span class="player-nav-item" data-player="people-greer">Greer</span>
+        <span class="player-nav-item" data-player="people-harrison">Harrison</span>
+        <span class="player-nav-item" data-player="people-jackson">Jackson</span>
+        <span class="player-nav-item" data-player="people-jame">Jame</span>
+        <span class="player-nav-item" data-player="people-johan">Johan</span>
+        <span class="player-nav-item" data-player="people-liam">Liam</span>
+        <span class="player-nav-item" data-player="people-lochy">Lochy</span>
+        <span class="player-nav-item" data-player="people-mark">Mark</span>
+        <span class="player-nav-item" data-player="people-max">Max</span>
+        <span class="player-nav-item" data-player="people-ruben">Reuben</span>
+        <span class="player-nav-item" data-player="people-robert">Robert</span>
+        <span class="player-nav-item" data-player="people-sam">Sam</span>
+        <span class="player-nav-item" data-player="people-placeholder">[placeholder]</span>
+    </div>
+</div>
