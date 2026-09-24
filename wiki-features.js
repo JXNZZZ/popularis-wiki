@@ -26,12 +26,19 @@
     ================================================== */
     (function readingProgress() {
         var fill = document.getElementById("reading-progress-fill");
-        if (!fill || !contentBox) return;
-        contentBox.addEventListener("scroll", function () {
-            var max = contentBox.scrollHeight - contentBox.clientHeight;
-            var pct = max > 0 ? (contentBox.scrollTop / max) * 100 : 0;
-            fill.style.width = pct.toFixed(1) + "%";
-        }, { passive: true });
+        if (!fill || !contentBox || !window.POP) return;
+        // scaleX (compositor-only) instead of width (layout + paint per frame)
+        var last = -1;
+        POP.onScroll("progress", {
+            read: function (box) {
+                var max = box.scrollHeight - box.clientHeight;
+                return max > 0 ? box.scrollTop / max : 0;
+            },
+            write: function (f) {
+                f = Math.round(f * 1000) / 1000;
+                if (f !== last) { last = f; fill.style.transform = "scaleX(" + f + ")"; }
+            }
+        });
     })();
 
     /* ==================================================
@@ -39,60 +46,61 @@
        (one persistent scroll listener; acts only on the
         home page's .home-scroll, otherwise no-ops)
     ================================================== */
-    function updateHomeScroll() {
-        if (!contentBox || !content) return;
-        var home = content.querySelector(".home-scroll");
-        if (!home) return;
+    // Registered with the batched scheduler only while the home page is
+    // showing: every rect is READ first, then every transform/class WRITTEN,
+    // and writes are skipped when nothing changed. Parallax is a GPU
+    // translate3d and is off entirely on the low tier / reduced motion.
+    function homeScrollHandler(home) {
+        var panels = Array.prototype.slice.call(home.querySelectorAll(".scroll-panel"));
+        var bgs = panels.map(function (p) { return p.querySelector(".scroll-panel-bg"); });
+        var inners = panels.map(function (p) { return p.querySelector(".scroll-panel-inner"); });
+        var dots = Array.prototype.slice.call(home.querySelectorAll(".rail-dot"));
+        var lastShift = panels.map(function () { return null; });
+        var lastActive = null;
 
-        var cRect = contentBox.getBoundingClientRect();
-        var cCenter = cRect.top + cRect.height / 2;
-        var panels = home.querySelectorAll(".scroll-panel");
-        var activeId = null;
-        var bestDist = Infinity;
-
-        panels.forEach(function (panel) {
-            var r = panel.getBoundingClientRect();
-            var pCenter = r.top + r.height / 2;
-
-            // parallax: shift the image opposite to its distance from centre
-            var bg = panel.querySelector(".scroll-panel-bg");
-            if (bg) {
-                var frac = (pCenter - cCenter) / cRect.height;   // ~ -1 .. 1
-                bg.style.transform = "translateY(" + (frac * 52).toFixed(1) + "px)";
+        return {
+            read: function (box) {
+                var cRect = box.getBoundingClientRect();
+                var cCenter = cRect.top + cRect.height / 2;
+                var rects = panels.map(function (p) { return p.getBoundingClientRect(); });
+                return { cRect: cRect, cCenter: cCenter, rects: rects };
+            },
+            write: function (d) {
+                if (!home.isConnected) return;
+                var parallax = !(window.POP && POP.tier === "low") && !pref("pref-reduce-motion");
+                var activeId = null, bestDist = Infinity;
+                d.rects.forEach(function (r, i) {
+                    var pCenter = r.top + r.height / 2;
+                    var visible = r.bottom > d.cRect.top && r.top < d.cRect.bottom;
+                    // parallax: only for panels on screen, only when it moved a whole px
+                    if (bgs[i] && parallax && visible) {
+                        var shift = Math.round(((pCenter - d.cCenter) / d.cRect.height) * 52);
+                        if (shift !== lastShift[i]) {
+                            lastShift[i] = shift;
+                            bgs[i].style.transform = "translate3d(0," + shift + "px,0)";
+                        }
+                    }
+                    // reveal the side card once the panel is meaningfully in view
+                    if (inners[i] && r.top < d.cRect.bottom - 70 && r.bottom > d.cRect.top + 70 &&
+                        !inners[i].classList.contains("revealed")) {
+                        inners[i].classList.add("revealed");
+                    }
+                    var dist = Math.abs(pCenter - d.cCenter);
+                    if (dist < bestDist) { bestDist = dist; activeId = panels[i].id; }
+                });
+                if (activeId && activeId !== lastActive) {
+                    lastActive = activeId;
+                    dots.forEach(function (dot) { dot.classList.toggle("active", dot.dataset.target === activeId); });
+                }
             }
-
-            // reveal the side card once the panel is meaningfully in view
-            var inner = panel.querySelector(".scroll-panel-inner");
-            if (inner && r.top < cRect.bottom - 70 && r.bottom > cRect.top + 70) {
-                inner.classList.add("revealed");
-            }
-
-            // active section = panel centre nearest the viewport centre
-            var dist = Math.abs(pCenter - cCenter);
-            if (dist < bestDist) { bestDist = dist; activeId = panel.id; }
-        });
-
-        if (activeId) {
-            home.querySelectorAll(".rail-dot").forEach(function (dot) {
-                dot.classList.toggle("active", dot.dataset.target === activeId);
-            });
-        }
-    }
-
-    if (contentBox) {
-        var homeRaf = false;
-        contentBox.addEventListener("scroll", function () {
-            if (homeRaf) return;
-            homeRaf = true;
-            requestAnimationFrame(function () { homeRaf = false; updateHomeScroll(); });
-        }, { passive: true });
-        window.addEventListener("resize", updateHomeScroll);
+        };
     }
 
     function enhanceHomeScroll(scope, page) {
-        if (page !== "about") return;
-        var home = scope.querySelector(".home-scroll");
-        if (!home || home.dataset.wired) return;
+        if (!window.POP) return;
+        var home = page === "about" ? scope.querySelector(".home-scroll") : null;
+        if (!home) { POP.onScroll("home", null); return; }
+        if (home.dataset.wired) return;
         home.dataset.wired = "1";
 
         // panels use scroll-reveal, not the blanket .fade-in (which would
@@ -105,15 +113,11 @@
         home.querySelectorAll(".rail-dot").forEach(function (dot) {
             dot.addEventListener("click", function () {
                 var t = document.getElementById(dot.dataset.target);
-                if (t && contentBox) {
-                    var top = contentBox.scrollTop +
-                        (t.getBoundingClientRect().top - contentBox.getBoundingClientRect().top) - 10;
-                    contentBox.scrollTo({ top: top, behavior: "smooth" });
-                }
+                if (t) POP.scrollTo(t);
             });
         });
 
-        updateHomeScroll();  // initial pass (parallax + reveal in-view + active dot)
+        POP.onScroll("home", homeScrollHandler(home));   // also runs an initial pass
     }
 
     /* ==================================================
@@ -139,10 +143,16 @@
         var items = [];
         var idx = 0;
 
+        // full-size images come as WebP where a WebP version exists
+        var webpOK = (function () {
+            try { return document.createElement("canvas").toDataURL("image/webp").indexOf("data:image/webp") === 0; }
+            catch (e) { return false; }
+        })();
         function render() {
             var it = items[idx];
             if (!it) return;
-            img.src = it.src;
+            img.decoding = "async";
+            img.src = (webpOK && /^images\/(thumbs\/)?explore_[a-z0-9]+\.jpg$/.test(it.src)) ? it.src.replace(/\.jpg$/, ".webp") : it.src;
             img.alt = it.cap || "";
             cap.textContent = it.cap || "";
             var multi = items.length > 1;
@@ -204,9 +214,13 @@
         if (!gal || !gal.length) return;
         if (scope.querySelector(".gallery")) return;
 
+        // The grid shows small thumbnails (WebP where available); the full
+        // image is only downloaded when it's opened in the lightbox.
         var thumbs = gal.map(function (it, i) {
+            var th = it.thumb || (/^images\/explore_[a-z0-9]+\.jpg$/.test(it.src) ? it.src.replace("images/", "images/thumbs/") : it.src);
+            var webp = /^images\/thumbs\/explore_/.test(th) ? '<source type="image/webp" srcset="' + th.replace(/\.jpg$/, ".webp") + '">' : "";
             return '<button class="gallery-item" data-i="' + i + '" aria-label="' + (it.cap || "Image") + '">' +
-                   '<img src="' + it.src + '" alt="' + (it.cap || "") + '" loading="lazy">' +
+                   '<picture>' + webp + '<img src="' + th + '" alt="' + (it.cap || "") + '" loading="lazy" decoding="async" width="640" height="360"></picture>' +
                    (it.cap ? '<span class="gallery-cap">' + it.cap + "</span>" : "") +
                    "</button>";
         }).join("");
@@ -305,23 +319,22 @@
     function enhanceCredits(scope, page) {
         if (page !== "credits") return;
         var canvas = scope.querySelector("#credits-skin");
-        if (!canvas || !window.skinview3d || canvas.dataset.wired) return;
+        if (!canvas || !window.loadSkinview || canvas.dataset.wired) return;
         canvas.dataset.wired = "1";
 
-        function mount(skin) {
+        // library is lazy-loaded; the shared factory caps pixel ratio and
+        // pauses rendering while the model is off screen
+        Promise.all([
+            window.loadSkinview(),
+            window.probeImage("images/jackson-skin.png")
+        ]).then(function (res) {
+            if (!canvas.isConnected) return;
             try {
                 if (window.creditsSkinViewer) window.creditsSkinViewer.dispose();
-                window.creditsSkinViewer = new skinview3d.SkinViewer({
-                    canvas: canvas, width: 280, height: 280, skin: skin
-                });
-                window.creditsSkinViewer.controls.enableZoom = true;
-                window.creditsSkinViewer.animation = new skinview3d.IdleAnimation();
+                window.creditsSkinViewer = window.makeSkinViewer(canvas, 280, 280,
+                    res[1] ? "images/jackson-skin.png" : "skins/placeholder.png");
             } catch (e) { /* invalid skin — leave blank */ }
-        }
-
-        fetch("images/jackson-skin.png", { method: "HEAD" })
-            .then(function (res) { mount(res.ok ? "images/jackson-skin.png" : "skins/placeholder.png"); })
-            .catch(function () { mount("skins/placeholder.png"); });
+        }).catch(function () {});
     }
 
     /* ==================================================
@@ -364,7 +377,7 @@
         toc.querySelectorAll("a[data-toc]").forEach(function (a) {
             a.addEventListener("click", function () {
                 var t = document.getElementById(a.dataset.toc);
-                if (t) t.scrollIntoView({ behavior: "smooth", block: "start" });
+                if (t) POP.scrollTo(t);
             });
         });
         toc.querySelector(".toc-toggle").addEventListener("click", function () {
@@ -372,22 +385,26 @@
             this.innerHTML = toc.classList.contains("collapsed") ? "+" : "&minus;";
         });
 
-        // scroll-spy
-        if (contentBox) {
-            var spy = function () {
-                var links = toc.querySelectorAll("a[data-toc]");
-                var current = null;
-                real.forEach(function (h) {
-                    var r = h.getBoundingClientRect();
-                    var boxR = contentBox.getBoundingClientRect();
-                    if (r.top - boxR.top <= 120) current = h.id;
-                });
-                links.forEach(function (l) {
-                    l.classList.toggle("active", l.dataset.toc === current);
-                });
-            };
-            contentBox.addEventListener("scroll", spy, { passive: true });
-            spy();
+        // scroll-spy through the batched scheduler. One key, so a new page
+        // replaces the old spy (it used to add a listener per page, forever).
+        if (window.POP) {
+            var links = Array.prototype.slice.call(toc.querySelectorAll("a[data-toc]"));
+            var heads = Array.prototype.slice.call(real);
+            var lastCur;
+            POP.onScroll("toc", {
+                read: function (box) {
+                    var top = box.getBoundingClientRect().top, cur = null;
+                    for (var i = 0; i < heads.length; i++) {
+                        if (heads[i].getBoundingClientRect().top - top <= 120) cur = heads[i].id; else break;
+                    }
+                    return cur;
+                },
+                write: function (cur) {
+                    if (cur === lastCur) return;
+                    lastCur = cur;
+                    links.forEach(function (l) { l.classList.toggle("active", l.dataset.toc === cur); });
+                }
+            });
         }
     }
 
@@ -457,49 +474,67 @@
 
     function escapeRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
 
+    // Single pass: one tree walk (exclusion checked once per text node) and
+    // one combined, longest-first regex. The old version did a full tree
+    // walk + closest() per term, per text node: ~100 ms on a big page on a
+    // slow phone, now a few ms.
+    var linkRe = null;
     function enhanceLinks(scope, page) {
         if (pref("pref-no-wikilinks")) return;
-        var terms = Object.keys(WIKI.LINKS).sort(function (a, b) { return b.length - a.length; });
+        if (!linkRe) {
+            var terms = Object.keys(WIKI.LINKS).sort(function (a, b) { return b.length - a.length; });
+            if (!terms.length) return;
+            linkRe = new RegExp("(^|[^A-Za-z0-9])(" + terms.map(escapeRe).join("|") + ")(?![A-Za-z0-9])", "g");
+        }
 
-        terms.forEach(function (term) {
-            var target = WIKI.LINKS[term];
-            if (target === page) return; // never self-link
-            var re = new RegExp("(?:^|[^A-Za-z0-9])(" + escapeRe(term) + ")(?![A-Za-z0-9])");
+        var nodes = [];
+        var walker = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT, {
+            acceptNode: function (node) {
+                if (!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+                if (node.parentElement && node.parentElement.closest(EXCLUDE)) return NodeFilter.FILTER_REJECT;
+                return NodeFilter.FILTER_ACCEPT;
+            }
+        });
+        for (var n = walker.nextNode(); n; n = walker.nextNode()) nodes.push(n);
 
-            var walker = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT, {
-                acceptNode: function (node) {
-                    if (!node.nodeValue || !node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
-                    if (node.parentElement && node.parentElement.closest(EXCLUDE)) return NodeFilter.FILTER_REJECT;
-                    return re.test(node.nodeValue) ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT;
-                }
+        var used = {};                      // first occurrence only, per term
+        nodes.forEach(function (node) {
+            var text = node.nodeValue, hits = [], m;
+            linkRe.lastIndex = 0;
+            while ((m = linkRe.exec(text))) {
+                var term = m[2], target = WIKI.LINKS[term];
+                var start = m.index + m[1].length;
+                linkRe.lastIndex = start + term.length;       // leave the boundary char for the next match
+                if (used[term] || target === page) continue;  // never self-link
+                used[term] = true;
+                hits.push({ start: start, term: term, target: target });
+            }
+            if (!hits.length) return;
+
+            var frag = document.createDocumentFragment(), pos = 0;
+            hits.forEach(function (h) {
+                if (h.start > pos) frag.appendChild(document.createTextNode(text.slice(pos, h.start)));
+                var link = document.createElement("a");
+                link.className = "wikilink";
+                link.dataset.page = h.target;
+                link.dataset.wired = "1"; // stop polish.js from double-binding
+                link.textContent = h.term;
+                link.title = label(h.target);
+                frag.appendChild(link);
+                pos = h.start + h.term.length;
             });
-
-            var node = walker.nextNode();
-            if (!node) return; // first occurrence only, per page
-
-            var m = re.exec(node.nodeValue);
-            if (!m) return;
-            var start = m.index + m[0].length - m[1].length; // account for leading boundary char
-            var before = node.nodeValue.slice(0, start);
-            var matchText = node.nodeValue.slice(start, start + term.length);
-            var after = node.nodeValue.slice(start + term.length);
-
-            var link = document.createElement("a");
-            link.className = "wikilink";
-            link.dataset.page = target;
-            link.dataset.wired = "1"; // stop polish.js from double-binding
-            link.textContent = matchText;
-            link.title = label(target);
-            link.addEventListener("click", function (e) {
-                e.preventDefault();
-                go(target);
-            });
-
-            var frag = document.createDocumentFragment();
-            if (before) frag.appendChild(document.createTextNode(before));
-            frag.appendChild(link);
-            if (after) frag.appendChild(document.createTextNode(after));
+            if (pos < text.length) frag.appendChild(document.createTextNode(text.slice(pos)));
             node.parentNode.replaceChild(frag, node);
+        });
+    }
+
+    // one delegated listener for every wiki-link on every page
+    if (content) {
+        content.addEventListener("click", function (e) {
+            var a = e.target.closest && e.target.closest("a.wikilink");
+            if (!a || content.isContentEditable) return;
+            e.preventDefault();
+            go(a.dataset.page);
         });
     }
 
@@ -603,49 +638,28 @@
     /* ==================================================
        run everything for a page
     ================================================== */
-    function enhance() {
-        if (!content) return;
-        var page = content.dataset.page;
-        if (!page) return;
+    // `scope` may be a DETACHED fragment: router.js enhances the new page
+    // before inserting it, so none of this costs layout or style work.
+    function enhance(scope, page) {
+        scope = scope || content;
+        page = page || (content && content.dataset.page);
+        if (!scope || !page) return;
 
-        // each enhancer is idempotent (checks before inserting), and the
-        // observer is disconnected around this call, so running it once per
-        // fresh page render is safe and re-renders (e.g. editor save) work too.
-        enhanceMeta(content, page);
-        enhanceHomeScroll(content, page);
-        enhanceCredits(content, page);
-        enhanceInfobox(content, page);
-        enhanceTOC(content, page);
-        enhanceLinks(content, page);
-        enhanceRefs(content, page);
-        enhanceGallery(content, page);   // after refs so it inserts above the panel
-        enhanceLightbox(content);        // after gallery so gallery imgs are skipped
+        if (window.POP) POP.onScroll("toc", null);   // re-added by enhanceTOC if this page has one
+        enhanceMeta(scope, page);
+        enhanceHomeScroll(scope, page);
+        enhanceCredits(scope, page);
+        enhanceInfobox(scope, page);
+        enhanceTOC(scope, page);
+        enhanceLinks(scope, page);
+        enhanceRefs(scope, page);
+        enhanceGallery(scope, page);   // after refs so it inserts above the panel
+        enhanceLightbox(scope);        // after gallery so gallery imgs are skipped
         if (window._wikiMarkDrawer) window._wikiMarkDrawer();
     }
 
-    if (content) {
-        var pending = false;
-        var observer = new MutationObserver(function () {
-            if (pending) return;
-            pending = true;
-            // setTimeout (not rAF) so enhancements still run when the tab
-            // is loaded in the background — rAF is paused for hidden tabs.
-            setTimeout(function () {
-                pending = false;
-                observer.disconnect();          // don't react to our own inserts
-                try { enhance(); } finally {
-                    observer.observe(content, { childList: true });
-                }
-            }, 0);
-        });
-        observer.observe(content, { childList: true });
-
-        // initial page (content may already be populated)
-        setTimeout(function () {
-            observer.disconnect();
-            try { enhance(); } finally {
-                observer.observe(content, { childList: true });
-            }
-        }, 0);
-    }
+    window.wikiEnhance = function (scope, page) {
+        try { enhance(scope, page); } catch (e) { console.error(e); }
+    };
+    if (content && content.children.length) window.wikiEnhance();
 })();

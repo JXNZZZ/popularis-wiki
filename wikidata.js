@@ -49,36 +49,36 @@ window.WIKI = (function () {
         players:   { updated: "2026-06-30", related: ["abilities", "seasons"] },
         lore:      { updated: "2026-06-24", related: ["seasons", "locations", "items"],
             gallery: [
-                { src: "images/explore_lore.png",      cap: "The world before the Sundering" },
-                { src: "images/explore_seasons.png",   cap: "Two islands, one broken continent" }
+                { src: "images/explore_lore.jpg",      cap: "The world before the Sundering" },
+                { src: "images/explore_seasons.jpg",   cap: "Two islands, one broken continent" }
             ]
         },
         abilities: { updated: "2026-06-22", related: ["players", "items", "lore"] },
         locations: { updated: "2026-06-18", related: ["lore", "season2"],
             gallery: [
-                { src: "images/explore_locations.png", cap: "Points of interest across the islands" },
-                { src: "images/explore_seasons.png",   cap: "The Great Divide" }
+                { src: "images/explore_locations.jpg", cap: "Points of interest across the islands" },
+                { src: "images/explore_seasons.jpg",   cap: "The Great Divide" }
             ]
         },
         items:     { updated: "2026-06-20", related: ["abilities", "lore", "locations"] },
         season1:   { updated: "2026-05-30", related: ["seasons", "season2", "lore"],
             gallery: [
-                { src: "images/explore_season1.png",   cap: "Season 1 — The Origin" },
-                { src: "images/explore_seasons.png",   cap: "The early archipelago" }
+                { src: "images/explore_season1.jpg",   cap: "Season 1 — The Origin" },
+                { src: "images/explore_seasons.jpg",   cap: "The early archipelago" }
             ]
         },
         season2:   { updated: "2026-06-28", related: ["seasons", "season1", "abilities", "locations"],
             gallery: [
-                { src: "images/explore_season2.png",   cap: "The volcanic and jungle islands" },
-                { src: "images/explore_locations.png", cap: "Points of interest" },
-                { src: "images/explore_players.png",   cap: "The two teams" },
-                { src: "images/explore_abilities.png", cap: "Ability trials" }
+                { src: "images/explore_season2.jpg",   cap: "The volcanic and jungle islands" },
+                { src: "images/explore_locations.jpg", cap: "Points of interest" },
+                { src: "images/explore_players.jpg",   cap: "The two teams" },
+                { src: "images/explore_abilities.jpg", cap: "Ability trials" }
             ]
         },
         season3:   { updated: "2026-06-10", related: ["seasons", "season2"],
             gallery: [
-                { src: "images/explore_season3.png",   cap: "Season 3 — In development" },
-                { src: "images/explore_seasons.png",   cap: "A new era of Popularis" }
+                { src: "images/explore_season3.jpg",   cap: "Season 3 — In development" },
+                { src: "images/explore_seasons.jpg",   cap: "A new era of Popularis" }
             ]
         },
         settings:  { updated: "2026-07-02", related: ["about"] },

@@ -10,3 +10,10 @@ Thumbs.db
 
 # local Claude Code tool config — not part of the site
 .claude/
+
+# full-resolution source art (optimised copies live in images/)
+_originals/
+
+# production build output (tools/build.mjs)
+_site/
+node_modules/

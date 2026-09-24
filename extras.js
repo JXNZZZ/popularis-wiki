@@ -38,35 +38,42 @@
     toastStack.id = "toast-stack";
     document.body.appendChild(toastStack);
 
-    function showToast(icon, title, subtitle) {
+    function showToast(icon, title, subtitle, desc) {
         var el = document.createElement("div");
         el.className = "toast";
         el.innerHTML =
             '<div class="toast-icon">' + icon + "</div>" +
-            '<div class="toast-body"><div class="toast-sub">' + (subtitle || "Advancement Made!") + "</div>" +
-            '<div class="toast-title">' + title + "</div></div>";
+            '<div class="toast-body">' +
+                '<div class="toast-sub">' + (subtitle || "Advancement Made!") + "</div>" +
+                '<div class="toast-title">' + title + "</div>" +
+                (desc ? '<div class="toast-desc">' + desc + "</div>" : "") +
+            "</div>";
         toastStack.appendChild(el);
         requestAnimationFrame(function () { el.classList.add("show"); });
         setTimeout(function () {
             el.classList.remove("show");
             setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 450);
-        }, 4200);
+        }, 5000);
     }
     window.popToast = showToast;
 
+    // `desc` = plain-English "what you did" (shown in the toast AND on the
+    // achievements page)
     var ACHIEVEMENTS = [
-        { id: "lore",      page: "lore",      icon: "&#128214;", title: "Lore Master" },
-        { id: "items",     page: "items",     icon: "&#128142;", title: "Treasure Hunter" },
-        { id: "locations", page: "locations", icon: "&#128506;", title: "Cartographer" },
-        { id: "abilities", page: "abilities", icon: "&#9889;",   title: "Power Player" },
-        { id: "players",   page: "players",   icon: "&#128101;", title: "Meet the Cast" },
-        { id: "credits",   page: "credits",   icon: "&#127916;", title: "Curtain Call" },
-        { id: "settings",  page: "settings",  icon: "&#9881;",   title: "Tinkerer" },
-        { id: "fullstory", icon: "&#128220;", title: "The Full Story" },
-        { id: "wanderer",  icon: "&#129517;", title: "Wiki Wanderer" },
-        { id: "socialite", icon: "&#127917;", title: "Socialite" },
-        { id: "titan",     icon: "&#128293;", title: "You Woke the Titans" }
+        { id: "players",   page: "players",   icon: "&#128101;", title: "Meet the Cast",       desc: "Visited the Players portal" },
+        { id: "lore",      page: "lore",      icon: "&#128214;", title: "Lore Master",         desc: "Read the World Lore" },
+        { id: "abilities", page: "abilities", icon: "&#9889;",   title: "Power Player",        desc: "Studied the player abilities" },
+        { id: "items",     page: "items",     icon: "&#128142;", title: "Treasure Hunter",     desc: "Browsed the Legendary Items" },
+        { id: "locations", page: "locations", icon: "&#128506;", title: "Cartographer",        desc: "Opened the interactive map" },
+        { id: "credits",   page: "credits",   icon: "&#127916;", title: "Curtain Call",        desc: "Read the credits" },
+        { id: "settings",  page: "settings",  icon: "&#9881;",   title: "Tinkerer",            desc: "Opened the settings" },
+        { id: "achhunt",   page: "achievements", icon: "&#127942;", title: "Achievement Hunter", desc: "Opened the achievements page" },
+        { id: "fullstory", icon: "&#128220;", title: "The Full Story",      desc: "Visited all three seasons" },
+        { id: "wanderer",  icon: "&#129517;", title: "Wiki Wanderer",       desc: "Explored 10 different pages" },
+        { id: "socialite", icon: "&#127917;", title: "Socialite",           desc: "Visited 5 player pages" },
+        { id: "titan",     icon: "&#128293;", title: "You Woke the Titans", desc: "Entered the Konami code" }
     ];
+    window.POPULARIS_ACHIEVEMENTS = ACHIEVEMENTS;
 
     function readArr(key) { try { return JSON.parse(localStorage.getItem(key) || "[]"); } catch (e) { return []; } }
     function writeArr(key, a) { try { localStorage.setItem(key, JSON.stringify(a)); } catch (e) {} }
@@ -77,7 +84,8 @@
         var a = ACHIEVEMENTS.filter(function (x) { return x.id === id; })[0];
         if (!a) return;
         u.push(id); writeArr("popularis_advancements", u);
-        showToast(a.icon, a.title, "Advancement Made!");
+        showToast(a.icon, a.title, "Advancement Made!", a.desc);
+        if (window.popRenderAchievements) window.popRenderAchievements();
     }
     window.popUnlock = unlock;
 
@@ -92,87 +100,41 @@
         if (v.filter(function (p) { return p.indexOf("people-") === 0; }).length >= 5) unlock("socialite");
     }
 
+    // Render the achievements page grid (called on page load + on unlock)
+    function renderAchievements() {
+        var grid = document.getElementById("achievements-grid");
+        if (!grid) return;
+        var unlocked = readArr("popularis_advancements");
+        var done = 0;
+        grid.innerHTML = ACHIEVEMENTS.map(function (a) {
+            var got = unlocked.indexOf(a.id) !== -1;
+            if (got) done++;
+            return '<div class="ach-card ' + (got ? "unlocked" : "locked") + '">' +
+                '<div class="ach-icon">' + (got ? a.icon : "&#128274;") + "</div>" +
+                '<div class="ach-info">' +
+                    '<div class="ach-title">' + (got ? a.title : "???") + "</div>" +
+                    '<div class="ach-desc">' + a.desc + "</div>" +
+                "</div>" +
+                (got ? '<div class="ach-check">&#10003;</div>' : "") +
+            "</div>";
+        }).join("");
+        var counter = document.getElementById("ach-count");
+        if (counter) counter.textContent = done + " / " + ACHIEVEMENTS.length + " unlocked";
+        var bar = document.getElementById("ach-bar-fill");
+        if (bar) bar.style.width = (done / ACHIEVEMENTS.length * 100).toFixed(0) + "%";
+    }
+    window.popRenderAchievements = renderAchievements;
+
     /* ==================================================
        AMBIENT PARTICLES  (theme-coloured embers)
     ================================================== */
-    var pcanvas = document.createElement("canvas");
-    pcanvas.id = "particle-canvas";
-    document.body.appendChild(pcanvas);
-    var pctx = pcanvas.getContext("2d");
-    var particles = [];
-    var pColor = { r: 255, g: 216, b: 107 };
-
-    function resizeP() { pcanvas.width = window.innerWidth; pcanvas.height = window.innerHeight; }
-    resizeP();
-    window.addEventListener("resize", resizeP);
-
-    function spawn(fromCentre) {
-        if (fromCentre) {
-            var ang = Math.random() * Math.PI * 2;
-            var spd = Math.random() * 4 + 1;
-            return {
-                x: pcanvas.width / 2, y: pcanvas.height / 2,
-                r: Math.random() * 2.4 + 0.8,
-                vx: Math.cos(ang) * spd, vy: Math.sin(ang) * spd,
-                life: 1, decay: 0.012 + Math.random() * 0.01, sway: Math.random() * 6.28, burst: true
-            };
-        }
-        return {
-            x: Math.random() * pcanvas.width,
-            y: pcanvas.height + Math.random() * 30,
-            r: Math.random() * 2 + 0.6,
-            vx: (Math.random() - 0.5) * 0.3,
-            vy: -(Math.random() * 0.5 + 0.18),
-            life: Math.random() * 0.5 + 0.5, decay: 0, sway: Math.random() * 6.28, burst: false
-        };
-    }
-
-    function updateParticleColour() {
-        var c = parseColor(getComputedStyle(docEl).getPropertyValue("--c1"));
-        if (c) pColor = c;
-    }
-    window.popParticleBurst = function () { for (var i = 0; i < 90; i++) particles.push(spawn(true)); };
-
-    function loop() {
-        requestAnimationFrame(loop);
-        // visibility level (0..1) from the settings slider
-        var level = (typeof window.PARTICLE_LEVEL === "number") ? window.PARTICLE_LEVEL : 1;
-        var off = hasPref("pref-no-particles") || hasPref("pref-reduce-motion") || document.hidden || level <= 0.02;
-        if (off) { pctx.clearRect(0, 0, pcanvas.width, pcanvas.height); return; }
-
-        // scale the ambient count with the level
-        var target = Math.round(60 * level);
-        var ambient = 0;
-        for (var a1 = 0; a1 < particles.length; a1++) if (!particles[a1].burst) ambient++;
-        while (ambient < target) { particles.push(spawn(false)); ambient++; }
-        // trim spare ambient particles when the level is turned down
-        for (var t = particles.length - 1; t >= 0 && ambient > target; t--) {
-            if (!particles[t].burst) { particles.splice(t, 1); ambient--; }
-        }
-
-        pctx.clearRect(0, 0, pcanvas.width, pcanvas.height);
-        pctx.globalCompositeOperation = "lighter";
-        var col = pColor.r + "," + pColor.g + "," + pColor.b;
-
-        for (var i = particles.length - 1; i >= 0; i--) {
-            var p = particles[i];
-            p.sway += 0.02;
-            p.x += p.vx + (p.burst ? 0 : Math.sin(p.sway) * 0.3);
-            p.y += p.vy;
-            if (p.burst) { p.vx *= 0.96; p.vy = p.vy * 0.96 + 0.02; p.life -= p.decay; }
-
-            if (p.life <= 0 || (!p.burst && p.y < -12)) { particles.splice(i, 1); continue; }
-
-            // ambient opacity scales with the level; bursts stay full
-            var alpha = p.burst ? Math.max(0, p.life) * 0.9 : (0.25 + p.life * 0.5) * level;
-            pctx.beginPath();
-            pctx.arc(p.x, p.y, p.r, 0, 6.2832);
-            pctx.fillStyle = "rgba(" + col + "," + alpha.toFixed(3) + ")";
-            pctx.fill();
-        }
-        pctx.globalCompositeOperation = "source-over";
-    }
-    requestAnimationFrame(loop);
+    // Drawn by the WebGL background renderer as additive GL_POINTS in the
+    // same draw pass as the shader (this used to be a second full-screen 2D
+    // canvas with its own 60fps loop and per-particle arc()/fillStyle calls).
+    window.popParticleBurst = function () {
+        if (window.POP_RENDERER) window.POP_RENDERER.burst(90);
+    };
+    function updateParticleColour() { /* renderer derives it from the page's c1 */ }
 
     /* ==================================================
        COMMAND PALETTE  (Ctrl / Cmd + K)

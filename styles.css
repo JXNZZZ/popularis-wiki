@@ -5,9 +5,6 @@
 
 :root {
     /* page theme — synced from the shader by router.js */
-    --c1: #d41353;
-    --c2: #85042f;
-
     /* palette */
     --gold: #ffd86b;
     --gold-deep: #e8a53c;
@@ -50,18 +47,23 @@
 
 @property --c1 {
     syntax: "<color>";
-    inherits: true;
+    inherits: false;
     initial-value: #d41353;
 }
 
 @property --c2 {
     syntax: "<color>";
-    inherits: true;
+    inherits: false;
     initial-value: #85042f;
 }
 
+/* Only the card animates its colours. An inherited property transitioning
+   on :root restyled every element in the document every frame for 1.2s;
+   non-inherited and scoped to one element it's a single layer repaint.
+   Accents inside the card read --theme-c1 (instant, inherited). */
 :root {
-    transition: --c1 1.2s ease, --c2 1.2s ease;
+    --theme-c1: #d41353;
+    --theme-c2: #85042f;
 }
 
 /* --------------------------------------------------
@@ -100,7 +102,8 @@ body {
 
 @font-face {
     font-family: "Balatro";
-    src: url("fonts/balatro.ttf") format("truetype");
+    src: url("fonts/balatro.woff2") format("woff2"),     /* 2.6 KB vs 13 KB */
+         url("fonts/balatro.ttf") format("truetype");
     font-weight: normal;
     font-style: normal;
     font-display: swap;
@@ -119,35 +122,11 @@ p {
 strong { color: var(--text); }
 
 /* --------------------------------------------------
-   film-grade overlays: vignette + pixel scanlines
-   (replaces the missing pixel-grid.png)
+   film-grade overlays (vignette + scanlines) are now baked into the
+   background shader. As two full-screen fixed layers on top of the whole
+   page (one with mix-blend-mode) they forced the compositor to blend
+   every pixel of the screen, every frame.
 -------------------------------------------------- */
-
-body::before {
-    content: "";
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 9998;
-    background: radial-gradient(
-        ellipse at center,
-        rgba(0, 0, 0, 0) 55%,
-        rgba(0, 0, 0, 0.38) 100%
-    );
-}
-
-body::after {
-    content: "";
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 9999;
-    opacity: var(--pixelgrid-opacity);
-    mix-blend-mode: overlay;
-    background-image:
-        repeating-linear-gradient(0deg,   rgba(255,255,255,0.5) 0 1px, transparent 1px 3px),
-        repeating-linear-gradient(90deg,  rgba(255,255,255,0.25) 0 1px, transparent 1px 3px);
-}
 
 /* --------------------------------------------------
    LOADING SCREEN
@@ -162,7 +141,7 @@ body::after {
     justify-content: center;
     background:
         radial-gradient(ellipse at 50% 35%, #1c1230 0%, var(--ink-950) 70%);
-    transition: opacity 0.6s ease, visibility 0.6s ease;
+    transition: opacity 0.35s ease, visibility 0.35s ease;
 }
 
 #loading-screen.done {
@@ -203,12 +182,12 @@ body::after {
 
 .loading-bar-fill {
     height: 100%;
-    width: 0%;
+    width: 100%;
     border-radius: 999px;
     background: linear-gradient(90deg, var(--gold-deep), var(--gold), #fff2c4, var(--gold));
-    background-size: 200% 100%;
-    animation: loadingShimmer 1.2s linear infinite;
-    transition: width 0.35s var(--ease-out);
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 0.35s var(--ease-out);
     box-shadow: 0 0 12px rgba(255, 216, 107, 0.6);
 }
 
@@ -258,12 +237,14 @@ body::after {
 -------------------------------------------------- */
 
 .content-box {
+    /* centred with inset + auto margins, NOT translate(-50%,-50%): a
+       fractional translate on a promoted layer blurs text on 1x screens */
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    inset: 0;
+    margin: auto;
     width: min(1080px, 90vw);
     height: 84vh;
+    height: 84dvh;      /* mobile: follows the URL bar instead of hiding under it */
 
     border: 3px solid transparent;
     background:
@@ -281,31 +262,25 @@ body::after {
         0 30px 70px rgba(0, 0, 0, 0.55),
         0 0 40px color-mix(in srgb, var(--c1) 25%, transparent),
         inset 0 1px 0 rgba(255, 255, 255, 0.08);
-    /* lighter blur: this pane is transformed on every mouse move and
-       sits over the animated WebGL shader, so a heavy backdrop blur
-       was the main source of tilt lag */
-    backdrop-filter: blur(6px) saturate(1.1);
-
-    transform-style: preserve-3d;
+    /* No backdrop-filter: blurring the animated WebGL canvas behind a card
+       this size re-ran a large blur every frame, and the card is opaque
+       enough that it looked almost identical. No preserve-3d either: a
+       preserve-3d scroller can't use composited (off-main-thread) scrolling. */
     will-change: transform;
-    transition:
-        transform 0.2s ease,
-        box-shadow 0.4s ease;
+    contain: layout paint style;
+    transition: transform 0.2s ease;
     scroll-behavior: smooth;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
 }
 
 /* hover tilt (router.js sets --tiltX / --tiltY) */
 .content-box.hover-tilt {
     transform:
-        translate(-50%, -50%)
         perspective(1100px)
         rotateX(var(--tiltX))
         rotateY(var(--tiltY))
         scale(1.008);
-    box-shadow:
-        0 34px 80px rgba(0, 0, 0, 0.6),
-        0 0 50px color-mix(in srgb, var(--c1) 35%, transparent),
-        inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 /* temporary while loading */
@@ -435,7 +410,6 @@ body.loading .content-box {
     border: 2px solid rgba(255, 216, 107, 0.25);
     border-radius: var(--radius);
     box-shadow: 0 20px 46px rgba(0, 0, 0, 0.6), var(--glow-gold);
-    backdrop-filter: blur(16px);
     z-index: 9999;
     opacity: 0;
     visibility: hidden;
@@ -486,18 +460,18 @@ nav {
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0.25));
     padding: 12px 22px;
     border-radius: var(--radius);
-    backdrop-filter: blur(6px);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 8px 20px rgba(0, 0, 0, 0.25);
 }
 
 nav ul {
     list-style: none;
     padding: 0;
-    margin: 14px 0 6px;
+    margin: 14px 0 10px;
     display: flex;
     gap: 18px;
     flex-wrap: wrap;
     align-items: center;
+    position: relative;   /* offsetParent for the sliding underline */
 }
 
 nav a {
@@ -520,9 +494,8 @@ nav a:hover {
 
 nav a.active-nav {
     background: rgba(255, 216, 107, 0.12);
-    animation:
-        navColorShift 4s ease-in-out infinite,
-        navFloat 2.4s ease-in-out infinite;
+    color: var(--gold);
+    animation: navFloat 2.4s ease-in-out infinite;   /* transform only */
 }
 
 @keyframes navColorShift {
@@ -539,38 +512,28 @@ nav a.active-nav {
     100% { transform: translateY(0); }
 }
 
-/* the sliding underline (router.js drives --underline-left/width) */
+/* the sliding underline (router.js drives --underline-left/top/width,
+   all relative to the <ul>, so it follows the active/hovered link and
+   tracks the correct line when the nav wraps) */
 nav ul::after {
     content: "";
     position: absolute;
-    bottom: -6px;
+    top: var(--underline-top, 100%);
+    left: var(--underline-left, 0px);
+    width: var(--underline-width, 0px);
     height: 3px;
     background: linear-gradient(90deg, #ffe6a7, #ffb3c6, #b5d8ff, #ffe6a7);
-    background-size: 300% 300%;
-    animation: navUnderlineShift 3.5s ease-in-out infinite;
     border-radius: 2px;
     opacity: 0.95;
     box-shadow: 0 0 10px rgba(255, 216, 107, 0.5);
-    left: var(--underline-left, 0px);
-    width: var(--underline-width, 0px);
-    margin-left: -3px;
-    margin-right: -5px;
-    transition: left 0.35s var(--ease-pop), width 0.35s var(--ease-pop);
+    pointer-events: none;
+    transition: left 0.3s var(--ease-pop), top 0.3s var(--ease-pop), width 0.3s var(--ease-pop);
 }
 
 @keyframes navUnderlineShift {
     0%   { background-position: 0% 50%; }
     50%  { background-position: 100% 50%; }
     100% { background-position: 0% 50%; }
-}
-
-#nav-slider {
-    position: absolute;
-    bottom: -6px;
-    height: 3px;
-    border-radius: 2px;
-    opacity: 0;
-    pointer-events: none;
 }
 
 /* --------------------------------------------------
@@ -640,7 +603,7 @@ h1, h2, h3 {
     bottom: 0.12em;
     width: 5px;
     border-radius: 3px;
-    background: linear-gradient(180deg, var(--gold), var(--c1));
+    background: linear-gradient(180deg, var(--gold), var(--theme-c1));
     box-shadow: 0 0 8px rgba(255, 216, 107, 0.5);
 }
 
@@ -691,8 +654,7 @@ h1, h2, h3 {
     animation: none;
 }
 
-h1 .letter, h2 .letter, h3 .letter,
-nav a.active-nav .letter {
+.wave-live > .letter {
     animation: letterWave 3.5s ease-in-out infinite;
 }
 
@@ -720,14 +682,16 @@ nav a.active-nav .letter {
 
 .fade-in {
     opacity: 0;
-    transform: translateY(10px) scale(0.99);
-    animation: fadeIn 0.5s var(--ease-out) forwards;
+    animation: fadeIn 0.45s var(--ease-out) forwards;
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px) scale(0.99); }
-    to   { opacity: 1; transform: translateY(0) scale(1); }
+    from { opacity: 0; transform: translate3d(0, 10px, 0); }
+    to   { opacity: 1; transform: none; }
 }
+
+/* only top-level blocks fade in; nested authored .fade-in just show */
+#content .fade-in .fade-in { opacity: 1; animation: none; }
 
 .content-box > * {
     animation: fadeIn 0.45s var(--ease-out) forwards;
@@ -739,27 +703,26 @@ nav a.active-nav .letter {
 .content-box > *:nth-child(3) { animation-delay: 0.15s; }
 .content-box > *:nth-child(4) { animation-delay: 0.20s; }
 
+/* opacity + transform only: a filter blur on the whole page content was a
+   full re-raster of the page every frame of the transition */
 #content.blur-out {
     opacity: 0;
-    filter: blur(4px) brightness(0.7);
-    transform: translateY(6px) scale(0.995);
-    transition: opacity 0.13s ease-out, filter 0.13s ease-out, transform 0.13s ease-out;
+    transform: translate3d(0, 6px, 0);
+    transition: opacity 0.13s ease-out, transform 0.13s ease-out;
 }
 
 #content.blur-in-prep {
     opacity: 0;
-    filter: blur(8px) brightness(0.7);
-    transform: translateY(-6px) scale(0.995);
+    transform: translate3d(0, -6px, 0);
 }
 
 #content.blur-in {
     opacity: 1;
-    filter: blur(0px) brightness(1);
-    transform: translateY(0) scale(1);
-    transition: opacity 0.16s ease-out, filter 0.16s ease-out, transform 0.16s ease-out;
+    transform: none;
+    transition: opacity 0.16s ease-out, transform 0.16s ease-out;
 }
 
-.color-shift { animation: navColorShift 3.5s ease-in-out infinite !important; }
+.color-shift { color: var(--gold) !important; }
 
 .nav-fade-out {
     color: white !important;
@@ -1016,7 +979,6 @@ nav a.active-nav .letter {
     font-size: 22px;
     font-weight: bold;
     cursor: pointer;
-    backdrop-filter: blur(6px);
     transition:
         transform 0.28s var(--ease-pop),
         background 0.25s ease,
@@ -1101,15 +1063,24 @@ nav a.active-nav .letter {
 }
 
 /* card artwork */
-.season-box.seasons::before   { background-image: url("images/explore_seasons.png"); }
-.season-box.players::before   { background-image: url("images/explore_players.png"); }
-.season-box.lore::before      { background-image: url("images/explore_lore.png"); }
-.season-box.abilities::before { background-image: url("images/explore_abilities.png"); }
-.season-box.locations::before { background-image: url("images/explore_locations.png"); }
-.season-box.items::before     { background-image: url("images/explore_items.png"); }
-.season-box.season1::before   { background-image: url("images/explore_season1.png"); }
-.season-box.season2::before   { background-image: url("images/explore_season2.png"); }
-.season-box.season3::before   { background-image: url("images/explore_season3.png"); }
+.season-box.seasons::before { background-image: url("images/thumbs/explore_seasons.jpg");
+    background-image: image-set(url("images/thumbs/explore_seasons.webp") type("image/webp"), url("images/thumbs/explore_seasons.jpg") type("image/jpeg")); }
+.season-box.players::before { background-image: url("images/thumbs/explore_players.jpg");
+    background-image: image-set(url("images/thumbs/explore_players.webp") type("image/webp"), url("images/thumbs/explore_players.jpg") type("image/jpeg")); }
+.season-box.lore::before { background-image: url("images/thumbs/explore_lore.jpg");
+    background-image: image-set(url("images/thumbs/explore_lore.webp") type("image/webp"), url("images/thumbs/explore_lore.jpg") type("image/jpeg")); }
+.season-box.abilities::before { background-image: url("images/thumbs/explore_abilities.jpg");
+    background-image: image-set(url("images/thumbs/explore_abilities.webp") type("image/webp"), url("images/thumbs/explore_abilities.jpg") type("image/jpeg")); }
+.season-box.locations::before { background-image: url("images/thumbs/explore_locations.jpg");
+    background-image: image-set(url("images/thumbs/explore_locations.webp") type("image/webp"), url("images/thumbs/explore_locations.jpg") type("image/jpeg")); }
+.season-box.items::before { background-image: url("images/thumbs/explore_items.jpg");
+    background-image: image-set(url("images/thumbs/explore_items.webp") type("image/webp"), url("images/thumbs/explore_items.jpg") type("image/jpeg")); }
+.season-box.season1::before { background-image: url("images/thumbs/explore_season1.jpg");
+    background-image: image-set(url("images/thumbs/explore_season1.webp") type("image/webp"), url("images/thumbs/explore_season1.jpg") type("image/jpeg")); }
+.season-box.season2::before { background-image: url("images/thumbs/explore_season2.jpg");
+    background-image: image-set(url("images/thumbs/explore_season2.webp") type("image/webp"), url("images/thumbs/explore_season2.jpg") type("image/jpeg")); }
+.season-box.season3::before { background-image: url("images/thumbs/explore_season3.jpg");
+    background-image: image-set(url("images/thumbs/explore_season3.webp") type("image/webp"), url("images/thumbs/explore_season3.jpg") type("image/jpeg")); }
 
 /* season status tag */
 .season-tag {
@@ -1124,7 +1095,6 @@ nav a.active-nav .letter {
     z-index: 4;
     background: rgba(0, 0, 0, 0.6);
     border: 1px solid var(--panel-border);
-    backdrop-filter: blur(4px);
 }
 
 .season-tag.gold  { color: var(--gold);  border-color: rgba(255, 216, 107, 0.5); }
@@ -1471,7 +1441,6 @@ nav a.active-nav .letter {
     background: linear-gradient(180deg, rgba(24, 19, 38, 0.85), rgba(10, 8, 16, 0.9));
     border-radius: var(--radius);
     border: 2px solid rgba(255, 216, 107, 0.2);
-    backdrop-filter: blur(8px);
     box-shadow: 0 12px 26px rgba(0, 0, 0, 0.4);
 
     opacity: 0;
@@ -1508,7 +1477,6 @@ nav a.active-nav .letter {
     padding: 0;
     margin: 0;
     box-shadow: none;
-    backdrop-filter: none;
 }
 
 #sticky-nav a {
@@ -1605,7 +1573,6 @@ nav a.active-nav .letter {
     border-radius: var(--radius);
     background: linear-gradient(180deg, rgba(255, 216, 107, 0.14), rgba(255, 216, 107, 0.05));
     border: 2px solid rgba(255, 216, 107, 0.3);
-    backdrop-filter: blur(6px);
     transition: transform 0.25s var(--ease-pop), background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
@@ -1631,7 +1598,6 @@ nav a.active-nav .letter {
     border: 1px solid var(--panel-border);
     border-radius: var(--radius);
     padding: 12px 14px;
-    backdrop-filter: blur(6px);
 }
 
 #player-sidebar ul {
@@ -1669,7 +1635,6 @@ nav a.active-nav .letter {
     padding-right: 20px;
     box-sizing: border-box;
     background: linear-gradient(180deg, rgba(20, 16, 32, 0.9), rgba(8, 6, 13, 0.95));
-    backdrop-filter: blur(10px);
     border: 2px solid rgba(255, 216, 107, 0.22);
     outline: 3px solid rgba(255, 255, 255, 0.06);
     outline-offset: 4px;
@@ -1737,7 +1702,6 @@ nav a.active-nav .letter {
     background: rgba(255, 255, 255, 0.07);
     border: 2px solid rgba(255, 255, 255, 0.13);
     border-radius: 8px;
-    backdrop-filter: blur(4px);
     cursor: pointer;
     transition: background 0.25s ease, border-color 0.25s ease, transform 0.2s var(--ease-pop), color 0.2s ease;
 }
@@ -2043,7 +2007,6 @@ body.font-large #content { font-size: 1.14rem; }
     visibility: hidden;
     transform: translateY(10px);
     transition: opacity 0.3s ease, transform 0.3s var(--ease-pop), visibility 0.3s, box-shadow 0.3s ease, background 0.3s ease;
-    backdrop-filter: blur(6px);
 }
 
 #back-to-top.show {
@@ -2078,7 +2041,6 @@ body.font-large #content { font-size: 1.14rem; }
     cursor: pointer;
     z-index: 999999;
     transition: background 0.25s ease, transform 0.2s var(--ease-pop), box-shadow 0.25s ease;
-    backdrop-filter: blur(6px);
 }
 
 #editor-btn:hover {
@@ -2103,7 +2065,6 @@ body.font-large #content { font-size: 1.14rem; }
     background: rgba(10, 8, 16, 0.9);
     border: 2px solid rgba(255, 216, 107, 0.25);
     border-radius: var(--radius);
-    backdrop-filter: blur(8px);
     transition: right 0.35s var(--ease-pop);
     display: flex;
     flex-direction: column;
@@ -2193,6 +2154,7 @@ img { pointer-events: auto; }
     .content-box {
         width: 94vw;
         height: 88vh;
+        height: 88dvh;
         padding: 18px 18px;
     }
 
@@ -2301,9 +2263,8 @@ img { pointer-events: auto; }
    stranding the heading at opacity:0. Keeping fadeIn first (with
    `both`) guarantees it ends visible. */
 .hero-title {
-    animation:
-        fadeIn 0.6s var(--ease-out) both,
-        heroGlow 4.5s ease-in-out 0.6s infinite;
+    animation: fadeIn 0.6s var(--ease-out) both;
+    text-shadow: 0 3px 0 rgba(0, 0, 0, 0.5), 0 0 28px rgba(255, 216, 107, 0.4);
 }
 
 @keyframes heroGlow {
@@ -2317,9 +2278,8 @@ img { pointer-events: auto; }
 
 /* kicker badge — fade in, then a soft pulse (same reasoning) */
 .hero-kicker {
-    animation:
-        fadeIn 0.6s var(--ease-out) both,
-        kickerPulse 3.2s ease-in-out 0.6s infinite;
+    animation: fadeIn 0.6s var(--ease-out) both;
+    box-shadow: 0 0 16px rgba(255, 216, 107, 0.28);
 }
 
 @keyframes kickerPulse {
@@ -2329,7 +2289,7 @@ img { pointer-events: auto; }
 
 /* nav logo — gentle glow on top of the float */
 #nav-logo {
-    animation: logoGlow 5s ease-in-out infinite !important;
+    animation: none !important;   /* static glow; the float lives on #logo-wrapper */
 }
 
 @keyframes logoGlow {
@@ -2388,7 +2348,7 @@ img { pointer-events: auto; }
 
 /* timeline dots — quiet pulse */
 .timeline li::before {
-    animation: dotPulse 2.8s ease-in-out infinite;
+    box-shadow: 0 0 12px rgba(255, 216, 107, 0.6);
 }
 
 @keyframes dotPulse {
@@ -2434,8 +2394,8 @@ img { pointer-events: auto; }
 }
 
 @keyframes cardIntro {
-    from { opacity: 0; transform: translate(-50%, -48%) scale(0.985); }
-    to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    from { opacity: 0; transform: translate3d(0, 2%, 0) scale(0.985); }
+    to   { opacity: 1; transform: none; }
 }
 
 /* ==================================================
@@ -2481,10 +2441,12 @@ html.pref-reduce-motion *::after {
 
 #reading-progress-fill {
     height: 100%;
-    width: 0%;
+    width: 100%;
+    transform: scaleX(0);
+    transform-origin: left center;
+    will-change: transform;
     background: linear-gradient(90deg, var(--gold-deep), var(--gold), #fff2c4);
     box-shadow: 0 0 10px rgba(255, 216, 107, 0.7);
-    transition: width 0.1s linear;
 }
 
 /* ==================================================
@@ -2851,7 +2813,6 @@ html.pref-reduce-motion *::after {
     gap: 14px;
     padding: 40px;
     background: rgba(4, 3, 8, 0.9);
-    backdrop-filter: blur(8px);
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.25s ease, visibility 0.25s ease;
@@ -2975,6 +2936,8 @@ html.pref-reduce-motion *::after {
     transition: transform 0.25s var(--ease-pop), border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
+.gallery-item picture { display: block; width: 100%; height: 100%; }
+
 .gallery-item img {
     width: 100%;
     height: 100%;
@@ -3034,7 +2997,6 @@ html.pref-reduce-motion *::after {
     font-size: 1.3rem;
     cursor: pointer;
     z-index: 99991;
-    backdrop-filter: blur(6px);
     transition: background 0.25s ease, transform 0.2s var(--ease-pop), box-shadow 0.25s ease;
 }
 
@@ -3049,7 +3011,6 @@ html.pref-reduce-motion *::after {
     inset: 0;
     z-index: 99992;
     background: rgba(3, 2, 6, 0.6);
-    backdrop-filter: blur(3px);
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.3s ease, visibility 0.3s ease;
@@ -3196,6 +3157,8 @@ html.pref-reduce-motion *::after {
     top: 0;
     height: 0;
     z-index: 25;
+    /* it's a <nav>: cancel the generic nav box (it drew an empty bar) */
+    padding: 0; margin: 0; border: 0; outline: 0; background: none; box-shadow: none;
 }
 
 .rail-inner {
@@ -3313,7 +3276,6 @@ html.pref-reduce-motion *::after {
     border: 1px solid rgba(255, 216, 107, 0.18);
     border-radius: var(--radius);
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(3px);
 
     opacity: 0;
     transform: translateY(42px);
@@ -3425,12 +3387,6 @@ html.pref-reduce-motion *::after {
    credits + 404
 ================================================== */
 
-#particle-canvas {
-    position: fixed;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-}
 
 /* --- advancement toasts (Minecraft-style) --- */
 #toast-stack {
@@ -3499,7 +3455,6 @@ html.pref-reduce-motion *::after {
     justify-content: center;
     padding-top: 14vh;
     background: rgba(4, 3, 8, 0.72);
-    backdrop-filter: blur(4px);
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.2s ease, visibility 0.2s ease;
@@ -3588,7 +3543,6 @@ html.pref-reduce-motion *::after {
     justify-content: center;
     padding: 20px;
     background: rgba(4, 3, 8, 0.85);
-    backdrop-filter: blur(6px);
     opacity: 0;
     visibility: hidden;
     transition: opacity 0.25s ease, visibility 0.25s ease;
@@ -3766,7 +3720,6 @@ html.pref-reduce-motion *::after {
     color: var(--gold);
     letter-spacing: 6px;
     text-shadow: 0 6px 0 rgba(0, 0, 0, 0.4), 0 0 50px rgba(255, 216, 107, 0.35);
-    animation: heroGlow 4.5s ease-in-out infinite;
 }
 .notfound-actions {
     display: flex;
@@ -4027,3 +3980,119 @@ html.pref-reduce-motion *::after {
     .season-hero { padding: 20px 18px; }
 }
 
+
+/* ==================================================
+   PERFORMANCE LAYER
+   perf.js puts gfx-low / gfx-medium / gfx-high on <html> (auto-detected
+   from the GPU + adaptive, or forced in Settings -> Graphics Quality).
+   Everything that animates forever animates transform/opacity only, so it
+   runs on the compositor; the tiers decide how much of it runs at all.
+================================================== */
+
+#loader {
+    contain: strict;
+    pointer-events: none;
+}
+
+/* off-screen sections skip style, layout and paint entirely until they
+   are about to scroll into view */
+.s2-section,
+.season-summary,
+.story-panel,
+.player-section,
+.lore-card,
+.info-card {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 520px;
+}
+
+/* parallax layers are promoted only on the tiers that move them */
+html:not(.gfx-low) .story-panel .scroll-panel-bg { will-change: transform; }
+
+/* LOW — phones, old laptops, software rendering: no perpetual motion
+   at all beyond the (throttled) background, no hover lifts on big cards */
+html.gfx-low #logo-wrapper,
+html.gfx-low nav a.active-nav,
+html.gfx-low .btn-primary,
+html.gfx-low .scroll-cue-arrow,
+html.gfx-low .loading-inner,
+html.gfx-low .letter {
+    animation: none !important;
+}
+html.gfx-low .content-box {
+    transition: transform 0.2s ease;      /* colour swaps instantly */
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.55);
+}
+html.gfx-low .scroll-panel-bg { transform: none !important; }
+html.gfx-low #logo-tilt,
+html.gfx-low #logo-wrapper { will-change: auto; }
+html.gfx-low .content-box.hover-tilt { transform: none; }
+
+/* MEDIUM — keep the character, drop the extras */
+html.gfx-medium .scroll-cue-arrow { animation-duration: 2.4s; }
+
+/* touch devices have no hover: never hold tilt layers for them */
+@media (hover: none) {
+    #logo-tilt, #logo-wrapper { will-change: auto; }
+    .content-box.hover-tilt { transform: none; }
+}
+
+/* OS-level reduced motion is honoured even without the site setting */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.001s !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.05s !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* while jumping to a section, render real layout for every section so the
+   target position is exact (perf.js POP.scrollTo) */
+#content.cv-lock .s2-section,
+#content.cv-lock .season-summary,
+#content.cv-lock .story-panel,
+#content.cv-lock .player-section,
+#content.cv-lock .lore-card,
+#content.cv-lock .info-card { content-visibility: visible; }
+
+/* the theme colour cross-fade repaints the card's border gradient + glow
+   every frame for 1.2s, so only the high tier gets it; others swap instantly */
+html.gfx-high .content-box {
+    transition: transform 0.2s ease, --c1 1.2s ease, --c2 1.2s ease;
+}
+
+/* home story panels: WebP with JPEG fallback; phones get the 640px versions */
+#s-lore .scroll-panel-bg { background-image: url("images/explore_lore.jpg");
+    background-image: image-set(url("images/explore_lore.webp") type("image/webp"), url("images/explore_lore.jpg") type("image/jpeg")); }
+#s-seasons .scroll-panel-bg { background-image: url("images/explore_seasons.jpg");
+    background-image: image-set(url("images/explore_seasons.webp") type("image/webp"), url("images/explore_seasons.jpg") type("image/jpeg")); }
+#s-players .scroll-panel-bg { background-image: url("images/explore_players.jpg");
+    background-image: image-set(url("images/explore_players.webp") type("image/webp"), url("images/explore_players.jpg") type("image/jpeg")); }
+#s-abilities .scroll-panel-bg { background-image: url("images/explore_abilities.jpg");
+    background-image: image-set(url("images/explore_abilities.webp") type("image/webp"), url("images/explore_abilities.jpg") type("image/jpeg")); }
+#s-locations .scroll-panel-bg { background-image: url("images/explore_locations.jpg");
+    background-image: image-set(url("images/explore_locations.webp") type("image/webp"), url("images/explore_locations.jpg") type("image/jpeg")); }
+#s-items .scroll-panel-bg { background-image: url("images/explore_items.jpg");
+    background-image: image-set(url("images/explore_items.webp") type("image/webp"), url("images/explore_items.jpg") type("image/jpeg")); }
+@media (max-width: 700px) {
+    #s-lore .scroll-panel-bg { background-image: url("images/thumbs/explore_lore.jpg");
+        background-image: image-set(url("images/thumbs/explore_lore.webp") type("image/webp"), url("images/thumbs/explore_lore.jpg") type("image/jpeg")); }
+    #s-seasons .scroll-panel-bg { background-image: url("images/thumbs/explore_seasons.jpg");
+        background-image: image-set(url("images/thumbs/explore_seasons.webp") type("image/webp"), url("images/thumbs/explore_seasons.jpg") type("image/jpeg")); }
+    #s-players .scroll-panel-bg { background-image: url("images/thumbs/explore_players.jpg");
+        background-image: image-set(url("images/thumbs/explore_players.webp") type("image/webp"), url("images/thumbs/explore_players.jpg") type("image/jpeg")); }
+    #s-abilities .scroll-panel-bg { background-image: url("images/thumbs/explore_abilities.jpg");
+        background-image: image-set(url("images/thumbs/explore_abilities.webp") type("image/webp"), url("images/thumbs/explore_abilities.jpg") type("image/jpeg")); }
+    #s-locations .scroll-panel-bg { background-image: url("images/thumbs/explore_locations.jpg");
+        background-image: image-set(url("images/thumbs/explore_locations.webp") type("image/webp"), url("images/thumbs/explore_locations.jpg") type("image/jpeg")); }
+    #s-items .scroll-panel-bg { background-image: url("images/thumbs/explore_items.jpg");
+        background-image: image-set(url("images/thumbs/explore_items.webp") type("image/webp"), url("images/thumbs/explore_items.jpg") type("image/jpeg")); }
+}
+
+/* page content fades in ONCE, as a whole (router.js content.animate);
+   authored .fade-in classes inside pages would add a second, per-block fade */
+#content .fade-in { opacity: 1; animation: none; }
+
+/* <picture> wrappers (WebP logo) must not add a box of their own */
+.loading-inner picture, #logo-tilt picture, .footer-brand picture { display: contents; }

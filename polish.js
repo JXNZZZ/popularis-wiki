@@ -62,6 +62,7 @@
         r.classList.toggle("pref-no-particles",  p.particles === false);
         // particle visibility 0..1 (read live by extras.js)
         window.PARTICLE_LEVEL = (p.particleLevel === undefined) ? 1 : Number(p.particleLevel);
+        if (window.POP_RENDERER) window.POP_RENDERER.syncFlags();
         return p;
     }
 
@@ -89,7 +90,7 @@
     var barFill = document.getElementById("loading-bar-fill");
     var tipEl = document.getElementById("loading-tip");
 
-    var MIN_SHOW = 1400;   // feels intentional, not sluggish
+    var MIN_SHOW = 250;    // just enough to not flash
     var startedAt = Date.now();
     var progress = 0;
     var hidden = false;
@@ -98,7 +99,7 @@
     var progressTimer = setInterval(function () {
         if (!barFill) return;
         progress += (90 - progress) * 0.12;
-        barFill.style.width = progress.toFixed(1) + "%";
+        barFill.style.transform = "scaleX(" + (progress / 100).toFixed(3) + ")";   // compositor-only
     }, 120);
 
     // rotating flavour tips
@@ -120,24 +121,37 @@
         clearInterval(progressTimer);
         clearInterval(tipTimer);
 
-        if (barFill) barFill.style.width = "100%";
+        if (barFill) barFill.style.transform = "scaleX(1)";
 
+        loadScreen.classList.add("done");
+        // remove from the tree once faded so it can't trap clicks
         setTimeout(function () {
-            loadScreen.classList.add("done");
-            // remove from the tree once faded so it can't trap clicks
-            setTimeout(function () {
-                if (loadScreen.parentNode) loadScreen.parentNode.removeChild(loadScreen);
-            }, 700);
-        }, 250);
+            if (loadScreen.parentNode) loadScreen.parentNode.removeChild(loadScreen);
+        }, 450);
     }
 
-    window.addEventListener("load", function () {
+    // Reveal as soon as the first page has RENDERED (router.js fires
+    // pop:firstpage), not on window.load, which waits for every image.
+    // ...and only once the (non-render-blocking) stylesheet is in too.
+    var pageReady = false;
+    function cssReady() { return document.documentElement.classList.contains("css-ready"); }
+    function revealSoon() {
+        if (!pageReady || !cssReady()) return;
         var elapsed = Date.now() - startedAt;
         setTimeout(hideLoadingScreen, Math.max(0, MIN_SHOW - elapsed));
-    });
+    }
+    document.addEventListener("pop:firstpage", function () { pageReady = true; revealSoon(); });
+    document.addEventListener("pop:css", revealSoon);
+    // (not window.load as well: the page fetch doesn't delay `load`, so on
+    // a slow network it could fire first and reveal an empty card)
+
 
     // fail-safe: never strand the visitor behind the loader
-    setTimeout(hideLoadingScreen, 7000);
+    setTimeout(function () {
+        // last resort: never leave the page hidden (even if CSS never came)
+        document.documentElement.classList.add("css-ready");
+        hideLoadingScreen();
+    }, 7000);
 
     /* --------------------------------------------------
        everything below needs the DOM
@@ -155,9 +169,13 @@
         var backToTop = document.getElementById("back-to-top");
 
         if (backToTop && contentBox) {
-            contentBox.addEventListener("scroll", function () {
-                backToTop.classList.toggle("show", contentBox.scrollTop > 350);
-            }, { passive: true });
+            var btShown = null;
+            if (window.POP) POP.onScroll("backtotop", {
+                read: function (box) { return box.scrollTop > 350; },
+                write: function (show) {
+                    if (show !== btShown) { btShown = show; backToTop.classList.toggle("show", show); }
+                }
+            });
 
             backToTop.addEventListener("click", function () {
                 contentBox.scrollTo({ top: 0, behavior: "smooth" });
@@ -300,6 +318,30 @@
                 });
             }
 
+            // GRAPHICS QUALITY: auto (detected + adaptive) / low / medium / high
+            var gfx = scope.querySelector("#graphics-quality");
+            if (gfx && !gfx.dataset.wired) {
+                gfx.dataset.wired = "true";
+                var note = scope.querySelector("#graphics-detected");
+                var showNote = function () {
+                    if (!note || !window.POP) return;
+                    note.textContent = "Running: " + POP.tier.charAt(0).toUpperCase() + POP.tier.slice(1) +
+                        (POP.auto ? " (auto-detected, adapts to your device)" : " (fixed)");
+                };
+                gfx.value = loadPrefs().graphics || "auto";
+                showNote();
+                gfx.addEventListener("change", function () {
+                    var p = loadPrefs();
+                    p.graphics = gfx.value;
+                    savePrefs(p);
+                    // a fresh detection when switching back to auto
+                    if (gfx.value === "auto") { try { localStorage.removeItem("popularis_gfx_auto"); } catch (e) {} }
+                    if (window.POP) POP.refreshTier();
+                    showNote();
+                });
+                document.addEventListener("pop:tier", showNote);
+            }
+
             // new feature toggles (defaults chosen so nothing is a surprise)
             wirePrefToggle(scope, "setting-shader",    "shader",     true,  true);   // ticked = shader ON
             wirePrefToggle(scope, "setting-grid",      "grid",       true,  true);   // ticked = grid ON
@@ -324,6 +366,8 @@
                     }
                     applyFontSize();
                     applyPrefs();
+                    if (window.POP) POP.refreshTier();
+                    var gq = scope.querySelector("#graphics-quality"); if (gq) gq.value = "auto";
 
                     // sync the visible controls back to defaults
                     var easy = scope.querySelector("#easy-reading-toggle");

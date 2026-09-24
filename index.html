@@ -16,7 +16,8 @@
     <meta name="description" content="The official Popularis Wiki — seasons, players, abilities, lore, locations and legendary items of the Popularis Minecraft event.">
     <meta name="theme-color" content="#0b0812">
     <title>Popularis Wiki</title>
-    <link rel="icon" href="images/favicon.png" alt="favicon">
+    <link rel="icon" href="images/favicon.png" type="image/png">
+    <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
 
     <!-- Open Graph / social share cards -->
     <meta property="og:type" content="website">
@@ -32,13 +33,97 @@
     <meta name="twitter:description" content="Seasons, players, abilities, lore, locations and legendary items of the Popularis Minecraft event.">
     <meta name="twitter:image" content="images/wiki_title.png">
 
-    <link rel="preload" href="fonts/balatro.ttf" as="font" type="font/ttf" crossorigin>
-    <script>window.WIKI_ASSET_VERSION = "17";</script>
-    <link rel="stylesheet" href="styles.css?v=17">
+    <link rel="preload" href="fonts/balatro.woff2" as="font" type="font/woff2" crossorigin>
+    <script>
+        window.WIKI_ASSET_VERSION = "18";
+        // apply the last known graphics tier before first paint (perf.js
+        // re-checks it properly once the page is up) - no flash of effects
+        try {
+            var g = (JSON.parse(localStorage.getItem("popularis_prefs") || "{}").graphics) || "auto";
+            if (g === "auto") g = (JSON.parse(localStorage.getItem("popularis_gfx_auto") || "{}").tier) || "medium";
+            document.documentElement.className += " gfx-" + g;
+        } catch (e) { document.documentElement.className += " gfx-medium"; }
+    </script>
+    <script>
+        // Start downloading the page you're opening NOW, in parallel with the
+        // CSS and scripts, instead of only after router.js has run
+        // (saves a whole network round trip before first content).
+        (function () {
+            var p = (location.hash.slice(1) || "about").replace(/[^a-z0-9-]/gi, "");
+            if (!p) return;
+            var l = document.createElement("link");
+            l.rel = "preload"; l.as = "fetch"; l.crossOrigin = "anonymous";
+            l.href = "pages/" + p + ".html?v=" + window.WIKI_ASSET_VERSION;
+            document.head.appendChild(l);
+        })();
+    </script>
+    <!-- Critical CSS: just enough to paint the loading screen immediately,
+         without waiting for the full stylesheet (which then loads without
+         blocking rendering). Keep in sync with the LOADING SCREEN section
+         of styles.css if you restyle the loader. -->
+    <style>
+        html { background: #07050c; }
+        body { margin: 0; color: #f4efe6; }
+        #loader { position: fixed; inset: 0; z-index: -1; }
+        #loading-screen { position: fixed; inset: 0; z-index: 100000; display: flex; align-items: center;
+            justify-content: center; background: radial-gradient(ellipse at 50% 35%, #1c1230 0%, #07050c 70%);
+            transition: opacity .35s ease, visibility .35s ease; }
+        #loading-screen.done { opacity: 0; visibility: hidden; pointer-events: none; }
+        .loading-inner { display: flex; flex-direction: column; align-items: center; gap: 26px; }
+        .loading-logo { width: min(420px, 70vw); height: auto; }
+        .loading-bar { width: min(340px, 60vw); height: 12px; border-radius: 999px; padding: 2px; overflow: hidden;
+            border: 2px solid rgba(255, 216, 107, .4); background: rgba(255, 255, 255, .06); box-sizing: border-box; }
+        .loading-bar-fill { height: 100%; width: 100%; border-radius: 999px; transform: scaleX(0); transform-origin: left center;
+            background: linear-gradient(90deg, #e8a53c, #ffd86b, #fff2c4, #ffd86b); transition: transform .35s ease; }
+        .loading-tip { font: 1rem "Trebuchet MS", sans-serif; letter-spacing: 3px; text-transform: uppercase;
+            color: rgba(244, 239, 230, .5); min-height: 1.4em; }
+        .loading-corner { display: none; }
+        /* everything else stays hidden under the loader until styles.css is in */
+        .content-box, #back-to-top, #editor-btn, #editor-toolbar, #reading-progress { visibility: hidden; }
+        html.css-ready .content-box, html.css-ready #back-to-top, html.css-ready #editor-btn,
+        html.css-ready #editor-toolbar, html.css-ready #reading-progress { visibility: visible; }
+    </style>
+    <script>
+        // if the stylesheet fails (flaky mobile data), retry it once, then
+        // show the page anyway rather than leaving it hidden under the loader
+        function popCssRetry(link) {
+            if (!link.dataset.retried) {
+                var n = link.cloneNode(); n.dataset.retried = "1";
+                n.href = link.href.split("&")[0] + "&retry=" + Date.now();
+                link.parentNode.replaceChild(n, link);
+                return;
+            }
+            document.documentElement.classList.add("css-ready");
+            document.dispatchEvent(new Event("pop:css"));
+        }
+    </script>
+    <link rel="preload" href="styles.css?v=18" as="style">
+    <link rel="stylesheet" href="styles.css?v=18" media="print" onload="this.media='all';document.documentElement.classList.add('css-ready');document.dispatchEvent(new Event('pop:css'))" onerror="popCssRetry(this)">
+    <noscript><link rel="stylesheet" href="styles.css?v=18"><style>.content-box{visibility:visible}</style></noscript>
+    <link rel="preload" href="images/wiki_title.webp" as="image" type="image/webp" fetchpriority="high">
+
+    <!-- Scripts are deferred: downloaded in parallel while the HTML parses,
+         run in order once it's done, never blocking rendering.
+         perf.js first (quality tier, governor, scroll scheduler).
+         skinview3d isn't loaded here: router.js fetches it the first time a
+         page actually shows a 3D skin. -->
+    <script defer src="perf.js?v=18"></script>
+    <script defer src="polish.js?v=18"></script>
+    <script defer src="backgroundshader.js?v=18"></script>
+    <script defer src="wikidata.js?v=18"></script>
+    <script defer src="router.js?v=18"></script>
+    <script defer src="wiki-features.js?v=18"></script>
+    <script defer src="extras.js?v=18"></script>
+    <script>
+        // offline + instant repeat visits (sw.js); registered after load so it
+        // never competes with the first page for bandwidth
+        if ("serviceWorker" in navigator && window.isSecureContext) {
+            addEventListener("load", function () { navigator.serviceWorker.register("sw.js?v=" + window.WIKI_ASSET_VERSION).catch(function () {}); });
+        }
+    </script>
 </head>
 
 <body class="">
-    <script src="https://unpkg.com/skinview3d"></script>
 
     <!-- reading progress bar -->
     <div id="reading-progress"><div id="reading-progress-fill"></div></div>
@@ -48,7 +133,7 @@
     =============================================== -->
     <div id="loading-screen" aria-hidden="true">
         <div class="loading-inner">
-            <img src="images/wiki_title.png" class="loading-logo" alt="Popularis Wiki">
+            <picture><source srcset="images/wiki_title.webp" type="image/webp"><img src="images/wiki_title.png" class="loading-logo" alt="Popularis Wiki" width="1024" height="300" fetchpriority="high"></picture>
             <div class="loading-bar">
                 <div class="loading-bar-fill" id="loading-bar-fill"></div>
             </div>
@@ -81,7 +166,7 @@
         <nav>
             <div id="logo-wrapper">
                 <div id="logo-tilt">
-                    <img src="images/wiki_title.png" id="nav-logo" alt="wiki logo">
+                    <picture><source srcset="images/wiki_title.webp" type="image/webp"><img src="images/wiki_title.png" id="nav-logo" alt="wiki logo" width="1024" height="300"></picture>
                 </div>
             </div>
 
@@ -92,7 +177,6 @@
                 <li><a data-page="settings">Options</a></li>
             </ul>
 
-            <div id="nav-slider"></div>
         </nav>
 
         <div id="content"></div>
@@ -100,7 +184,7 @@
         <footer id="site-footer">
             <div class="footer-main">
                 <div class="footer-brand">
-                    <img src="images/wiki_title.png" alt="Popularis Wiki" class="footer-logo">
+                    <picture><source srcset="images/wiki_title.webp" type="image/webp"><img src="images/wiki_title.png" alt="Popularis Wiki" class="footer-logo" width="1024" height="300" loading="lazy" decoding="async"></picture>
                     <p>The community wiki for <strong>Popularis</strong> — a multi-season Minecraft event of custom abilities, handcrafted islands, riddles and deep lore.</p>
                 </div>
 
@@ -149,12 +233,5 @@
         <button data-cmd="link">Link</button>
     </div>
 
-    <script src="polish.js?v=17"></script>
-    <script src="backgroundshader.js?v=5"></script>
-    <script src="wikidata.js?v=16"></script>
-    <script src="router.js?v=16"></script>
-    <script src="wiki-features.js?v=16"></script>
-    <script src="extras.js?v=17"></script>
-    <script src="libs/skinview3d.bundle.js"></script>
 </body>
 </html>
