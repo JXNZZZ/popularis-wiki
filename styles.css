@@ -4614,3 +4614,30 @@ nav ul::after {                            /* the sliding underline: a plain gol
 .wiki-toc li { display: flex; align-items: baseline; gap: 10px; margin: 6px 0; }
 .wiki-toc li::before { position: static; flex: 0 0 auto; min-width: 16px; font-family: "Balatro", sans-serif; }
 .wiki-toc a:hover { padding-left: 0; }
+
+/* ==================================================
+   NO SHOUTING
+   The v2 styles forced CAPITALS + wide letter-spacing onto dates, labels,
+   buttons, headings and badges (46 rules) - the most "generated" look on
+   the site. Text now shows the way it's written, with normal spacing.
+================================================== */
+*, *::before, *::after { text-transform: none !important; }
+
+/* pixel font: a hair of tracking keeps it crisp, never the 3-6px spread */
+body * { letter-spacing: 0.5px !important; }
+/* reading font: no tracking at all */
+#content p, #content li, #content dd, #content td, #content blockquote, #content figcaption,
+.season-intro, .setting-hint, .ref-note, .book-text, .ach-desc, .toast-desc, .gallery-cap,
+#search-input, .search-results button, .map-links, .hero-sub, .quote-card p {
+    letter-spacing: 0 !important;
+}
+.hero-title { letter-spacing: 2px !important; }
+
+/* labels that were tiny shouty caps get a touch bigger now they're lowercase */
+.pm-updated, .pm-cat, .sidebar-title, .toc-head, .drawer-cat-head, .s2-eyebrow,
+.stat span, .fact span, .phase-stat, .card-meta, .infobox dt, .toast-sub,
+.footer-col h4, .footer-copy, #footer-updated, .refs-col h4, .season-badge, .infobox-badge {
+    font-size: max(0.82rem, 1em);
+}
+
+#content .hero-title { font-size: clamp(2.6rem, 6vw, 4rem); }
