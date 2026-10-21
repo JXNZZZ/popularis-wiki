@@ -759,6 +759,50 @@
         });
     }
 
+    /* ==================================================
+       HOME: Minecraft-style splash text + the row of player heads
+    ================================================== */
+    var SPLASHES = [
+        "Now with two Titans!", "Seven days behind a wall!", "Three lives. Use them wisely!",
+        "Non-Euclidean!", "Contains lava!", "Do not trust the bridges!", "Also try Season 1!",
+        "Verdantis is watching!", "Ignivar did nothing wrong?", "17 players, 0 regrets!",
+        "Press Ctrl+K!", "Try the Konami code!", "Handcrafted islands!", "Season 3 soon!",
+        "Built at 3am!", "100% more chaos!", "Keep inventory: off!", "Pixel perfect!",
+        "Click me again!", "The wall is coming down!", "Now in 3D!", "Riddles inside!"
+    ];
+    var splashIdx = Math.floor(Math.random() * SPLASHES.length);
+
+    function enhanceHomeFun(scope, page) {
+        if (page !== "about") return;
+
+        var splash = scope.querySelector("#splash");
+        if (splash && !splash.dataset.wired) {
+            splash.dataset.wired = "1";
+            splash.textContent = SPLASHES[splashIdx];
+            splash.addEventListener("click", function () {
+                splashIdx = (splashIdx + 1 + Math.floor(Math.random() * (SPLASHES.length - 1))) % SPLASHES.length;
+                splash.textContent = SPLASHES[splashIdx];
+                splash.classList.remove("pop"); void splash.offsetWidth; splash.classList.add("pop");
+                if (window.POP_RENDERER) window.POP_RENDERER.burst(40);
+            });
+        }
+
+        // faces cut straight from each player's skin file (8x8 face + hat
+        // layer, scaled up with crisp pixels). No skin yet? Steve-ish
+        // placeholder shows through underneath.
+        var heads = scope.querySelector("#hero-heads");
+        if (heads && !heads.dataset.wired) {
+            heads.dataset.wired = "1";
+            var cat = (WIKI.CATEGORIES || []).filter(function (c) { return c.id === "players"; })[0];
+            var people = (cat ? cat.pages : []).filter(function (p) { return p !== "people-placeholder"; });
+            heads.innerHTML = people.map(function (p, i) {
+                var skin = "skins/" + p.replace("people-", "") + ".png";
+                return '<a class="mc-head" data-page="' + p + '" href="#' + p + '" style="--skin:url(' + skin +
+                    ');--d:' + (i * 0.07).toFixed(2) + 's" aria-label="' + esc(label(p)) + '"><span>' + esc(label(p)) + "</span></a>";
+            }).join("");
+        }
+    }
+
     // `scope` may be a DETACHED fragment: router.js enhances the new page
     // before inserting it, so none of this costs layout or style work.
     function enhance(scope, page) {
@@ -777,6 +821,7 @@
         enhanceGallery(scope, page);   // after refs so it inserts above the panel
         enhanceGalleryPage(scope, page);
         enhanceMap(scope, page);
+        enhanceHomeFun(scope, page);
         enhanceLightbox(scope);        // after gallery so gallery imgs are skipped
         if (window._wikiMarkDrawer) window._wikiMarkDrawer();
     }

@@ -4641,3 +4641,209 @@ body * { letter-spacing: 0.5px !important; }
 }
 
 #content .hero-title { font-size: clamp(2.6rem, 6vw, 4rem); }
+
+/* ==================================================
+   FUN LAYER - Minecraft, not "AI landing page"
+   splash text, player heads, oak signs, inventory-slot stats,
+   bouncy cards. Every animation is transform/opacity only.
+================================================== */
+
+/* ---------- title + splash text (like the game's title screen) ---------- */
+.hero-title-wrap { position: relative; display: inline-block; padding-right: 40px; }
+#content .hero-title { margin: 0; }
+.splash {
+    position: absolute;
+    left: 100%;
+    top: 58%;
+    margin-left: -18px;
+    transform-origin: 0 50%;
+    --rot: -17deg;
+    white-space: nowrap;
+    background: none;
+    border: 0;
+    padding: 4px;
+    cursor: pointer;
+    font-family: "Balatro", sans-serif;
+    font-size: clamp(0.95rem, 1.6vw, 1.2rem);
+    color: #ffff55;
+    text-shadow: 2px 2px 0 #3f3f15;
+    animation: splashPulse 0.55s ease-in-out infinite alternate;
+    transform: rotate(var(--rot));
+}
+@keyframes splashPulse {
+    from { transform: rotate(var(--rot)) scale(1); }
+    to   { transform: rotate(var(--rot)) scale(1.08); }
+}
+.splash.pop { animation: splashPop 0.25s ease-out, splashPulse 0.55s ease-in-out 0.25s infinite alternate; }
+@keyframes splashPop {
+    from { transform: rotate(var(--rot)) scale(1.5); }
+    to   { transform: rotate(var(--rot)) scale(1); }
+}
+@media (max-width: 760px) {
+    .hero-title-wrap { padding-right: 0; display: block; }
+    .splash { position: static; display: block; margin: 10px 0 8px; transform-origin: 0 50%; --rot: -4deg; }
+}
+
+/* ---------- the row of player heads ---------- */
+.hero-heads-wrap { margin: 28px 0 22px; }
+.hero-heads-label {
+    font-family: "Balatro", sans-serif;
+    color: var(--gold-deep);
+    margin-bottom: 10px;
+}
+.hero-heads { display: flex; flex-wrap: wrap; gap: 10px; }
+.mc-head {
+    --s: 44px;
+    position: relative;
+    width: var(--s);
+    height: var(--s);
+    display: block;
+    image-rendering: pixelated;
+    /* hat layer, face, then the placeholder face showing through for anyone without a skin yet */
+    background-image: var(--skin), var(--skin), url("skins/placeholder.png");
+    background-size: 800% 800%;
+    background-position: 71.4286% 14.2857%, 14.2857% 14.2857%, 14.2857% 14.2857%;
+    background-repeat: no-repeat;
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.55);
+    outline: 2px solid #000;
+    animation: headBob 2.6s ease-in-out var(--d) infinite;
+    transition: transform 0.15s steps(3);
+}
+@keyframes headBob {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-3px); }
+}
+.mc-head:hover { animation: none; transform: translateY(-10px) rotate(-6deg) scale(1.15); z-index: 2; }
+.mc-head span {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 8px);
+    transform: translateX(-50%);
+    padding: 4px 8px;
+    white-space: nowrap;
+    font-family: "Balatro", sans-serif;
+    font-size: 0.8rem;
+    color: #fff;
+    background: rgba(16, 0, 16, 0.94);
+    border: 2px solid #2a0a5e;            /* the game's purple tooltip border */
+    box-shadow: inset 0 0 0 1px #5000ff55;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.12s ease;
+}
+.mc-head:hover span, .mc-head:focus-visible span { opacity: 1; }
+html.gfx-low .mc-head { animation: none; }
+
+/* ---------- quotes as oak signs ---------- */
+.hero-quotes .quote-card {
+    background:
+        repeating-linear-gradient(180deg, rgba(0, 0, 0, 0.12) 0 2px, transparent 2px 22px),
+        linear-gradient(180deg, #b8894f, #9c6f3c);
+    border: 3px solid #4e3317;
+    box-shadow: inset 0 0 0 2px #c79a5e, 0 6px 0 rgba(0, 0, 0, 0.45);
+    border-radius: 2px;
+    color: #1d1208;
+    padding: 16px 20px 14px;
+    transform: rotate(-0.6deg);
+    transition: transform 0.2s ease;
+}
+.hero-quotes .quote-card:nth-child(2) { transform: rotate(0.7deg); }
+.hero-quotes .quote-card:hover { transform: rotate(0deg) translateY(-4px); }
+.hero-quotes .quote-card p { color: #1d1208; font-style: normal; font-family: "Balatro", sans-serif; letter-spacing: 0.5px !important; }
+.hero-quotes .quote-card span { color: #5a1a0a; }
+.hero-quotes .quote-card a, .hero-quotes .quote-card .wikilink { color: #7a1500; }
+
+/* ---------- stats as inventory slots (number = item count) ---------- */
+.stat-strip .stat {
+    position: relative;
+    min-width: 0;
+    flex: 0 1 140px;
+    height: 84px;
+    padding: 0;
+    background: #8b8b8b;
+    border: 0;
+    border-radius: 0;
+    box-shadow: inset 3px 3px 0 #373737, inset -3px -3px 0 #ffffff;
+    transition: transform 0.15s ease;
+}
+.stat-strip .stat:hover { transform: translateY(-3px); background: #9b9b9b; }
+.stat-strip .stat b {
+    position: absolute;
+    right: 10px;
+    bottom: 6px;
+    font-size: 1.7rem;
+    color: #fff;
+    text-shadow: 3px 3px 0 #3f3f3f;
+}
+.stat-strip .stat span {
+    position: absolute;
+    left: 10px;
+    top: 8px;
+    font-family: "Balatro", sans-serif;
+    font-size: 0.85rem;
+    color: #2e2e2e;
+    text-shadow: none;
+}
+
+/* ---------- a bit of bounce everywhere ---------- */
+.btn:active { transform: translateY(2px) scale(0.98); }
+.season-box:hover, .info-card:hover, .lore-card:hover, .gallery-item:hover, .ach-card:hover, .related-card:hover {
+    transform: translateY(-4px) rotate(-0.4deg);
+}
+.season-box, .info-card, .lore-card, .gallery-item, .ach-card, .related-card {
+    transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+}
+
+/* ---------- fun, but in the site's own colours (dark panels + gold) ---------- */
+.splash { color: var(--gold); text-shadow: 2px 2px 0 #3a1f05; }
+
+/* quotes: dark panel, gold edge, a big quote mark - not wooden signs */
+.hero-quotes .quote-card {
+    background: rgba(0, 0, 0, 0.28);
+    border: 2px solid rgba(255, 216, 107, 0.18);
+    border-left: 4px solid var(--gold);
+    box-shadow: var(--bevel), 0 6px 16px rgba(0, 0, 0, 0.28);
+    border-radius: var(--radius);
+    color: var(--text);
+    padding: 16px 20px 14px 46px;
+    transform: none;
+}
+.hero-quotes .quote-card:nth-child(2) { transform: none; }
+.hero-quotes .quote-card:hover { transform: translateY(-4px) rotate(-0.5deg); }
+.hero-quotes .quote-card::before {
+    content: "\201C";
+    position: absolute;
+    left: 12px;
+    top: 4px;
+    font-family: Georgia, serif;
+    font-size: 2.6rem;
+    line-height: 1;
+    color: var(--gold);
+    opacity: 0.8;
+}
+.hero-quotes .quote-card p { color: var(--text); font-style: italic; }
+.hero-quotes .quote-card span { color: var(--gold); }
+.hero-quotes .quote-card a, .hero-quotes .quote-card .wikilink { color: var(--gold); }
+
+/* stats: dark bevelled slots, gold number in the corner like an item count */
+.stat-strip .stat {
+    background: rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(255, 216, 107, 0.16);
+    border-radius: var(--radius);
+    box-shadow: var(--bevel), 0 6px 14px rgba(0, 0, 0, 0.25);
+}
+.stat-strip .stat:hover { background: rgba(255, 216, 107, 0.07); transform: translateY(-3px) rotate(-0.6deg); }
+.stat-strip .stat b { color: var(--gold); text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.6); }
+.stat-strip .stat span { color: var(--text-dim); }
+
+/* player-head name tags: the site's tooltip colours */
+.mc-head span {
+    background: #1a1424;
+    border: 2px solid rgba(255, 216, 107, 0.45);
+    box-shadow: 0 4px 0 rgba(0, 0, 0, 0.5);
+    color: var(--gold);
+}
+.mc-head { outline-color: #120d18; box-shadow: 0 4px 0 rgba(0, 0, 0, 0.55), 0 0 0 2px rgba(255, 216, 107, 0.15); }
+
+.hero-quotes .quote-card::before { content: none; }
+.hero-quotes .quote-card { padding-left: 20px; }
