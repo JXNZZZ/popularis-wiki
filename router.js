@@ -46,6 +46,8 @@ const PAGE_META = {
     season2: { title: "Season 2" },
     season3: { title: "Season 3" },
     credits: { title: "Credits" },
+    achievements: { title: "Advancements" },
+    gallery: { title: "Gallery" },
     "404": { title: "Not Found" }
 };
 
@@ -1157,7 +1159,7 @@ function initSimpleSettingsUI() {
    nav
 -------------------------------------------------- */
 
-document.querySelectorAll("nav a[data-page]").forEach(a => {
+document.querySelectorAll(".topbar a[data-page]").forEach(a => {
     a.addEventListener("click", event => {
         event.preventDefault();
         navigateToPage(a.dataset.page);

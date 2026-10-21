@@ -29,6 +29,34 @@ for (const f of ["editor.js", "JS-Instructions.png", "fonts/balatro2.ttf", "imag
     if (existsSync(join(OUT, f))) rmSync(join(OUT, f));
 }
 
+// Gallery: shrink anything huge (phones would download a 6 MB screenshot
+// just to view it) and make a small WebP thumbnail for the grid. The
+// gallery page asks for images/gallery/thumbs/<name>.webp.
+const GAL = join(OUT, "images", "gallery");
+if (existsSync(GAL)) {
+    const sharp = (await import("sharp")).default;
+    mkdirSync(join(GAL, "thumbs"), { recursive: true });
+    let n = 0;
+    for (const f of readdirSync(GAL)) {
+        const m = /^(.+)\.(jpe?g|png|webp)$/i.exec(f);
+        if (!m) continue;
+        const src = join(GAL, f);
+        const input = readFileSync(src);
+        await sharp(input).rotate().resize({ width: 480, withoutEnlargement: true })
+            .webp({ quality: 72 }).toFile(join(GAL, "thumbs", m[1] + ".webp"));
+        const meta = await sharp(input).metadata();
+        if (meta.width > 1920) {                       // same file name + format, just smaller
+            const big = sharp(input).rotate().resize({ width: 1920 });
+            const ext = m[2].toLowerCase();
+            const out = ext === "png" ? big.png({ compressionLevel: 9, palette: false })
+                      : ext === "webp" ? big.webp({ quality: 82 }) : big.jpeg({ quality: 85, mozjpeg: true });
+            writeFileSync(src, await out.toBuffer());
+        }
+        n++;
+    }
+    console.log("gallery:", n, "pictures, thumbnails made");
+}
+
 // minify every top-level script (libs/ is already minified)
 const run = (cmd, args) => execFileSync(cmd, args, { stdio: "inherit", shell: win });
 for (const f of readdirSync(OUT)) {

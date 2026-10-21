@@ -21,7 +21,7 @@ window.WIKI = (function () {
         },
         {
             id: "world", label: "World", icon: "&#127758;",
-            pages: ["lore", "locations", "items", "abilities"]
+            pages: ["lore", "locations", "items", "abilities", "gallery"]
         },
         {
             id: "players", label: "Players", icon: "&#128101;",
@@ -35,7 +35,7 @@ window.WIKI = (function () {
         },
         {
             id: "meta", label: "Meta", icon: "&#9881;",
-            pages: ["settings", "credits"]
+            pages: ["achievements", "settings", "credits"]
         }
     ];
 
@@ -47,6 +47,8 @@ window.WIKI = (function () {
         about:     { updated: "2026-07-01", related: ["seasons", "players", "lore"] },
         seasons:   { updated: "2026-06-30", related: ["season2", "season1", "lore"] },
         players:   { updated: "2026-06-30", related: ["abilities", "seasons"] },
+        achievements: { updated: "2026-10-21", related: ["about", "settings"] },
+        gallery:   { updated: "2026-10-21", related: ["seasons", "locations", "players"] },
         lore:      { updated: "2026-06-24", related: ["seasons", "locations", "items"],
             gallery: [
                 { src: "images/explore_lore.jpg",      cap: "The world before the Sundering" },

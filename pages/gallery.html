@@ -1,0 +1,58 @@
+<!--
+    =====================================================================
+    HOW TO ADD / CHANGE GALLERY PICTURES
+    =====================================================================
+    1. Put the screenshot in   images/gallery/
+       (any .jpg / .png / .webp, any size - full-res is fine)
+
+    2. Add ONE line for it to the list below, inside the [ ... ]:
+
+         { "src": "images/gallery/the-wall-drops.png", "by": "Jackson", "season": 2, "caption": "The wall coming down" },
+
+       - "src"     the file you added (must match the filename exactly)
+       - "by"      who took it - shows on the picture and in the
+                   "Taken by" filter
+       - "season"  1, 2 or 3 (or 0 if it's not from a season)
+       - "caption" one short line, shown when you open the picture
+
+       Every line ends with a comma EXCEPT the last one.
+       Order = the order they appear on the page.
+
+    3. Push to GitHub. The deploy automatically makes small, fast
+       thumbnails of every picture in images/gallery/ - you never have
+       to resize anything yourself.
+
+    To REMOVE a picture: delete its line (and the file if you like).
+    To CHANGE one: swap the file, or edit its line.
+    =====================================================================
+-->
+<script type="application/json" id="gallery-data">
+[
+    { "src": "images/explore_season2.jpg",   "by": "Popularis", "season": 2, "caption": "The volcanic and jungle islands" },
+    { "src": "images/explore_locations.jpg", "by": "Popularis", "season": 2, "caption": "Points of interest across the islands" },
+    { "src": "images/explore_players.jpg",   "by": "Popularis", "season": 2, "caption": "The two teams" },
+    { "src": "images/explore_abilities.jpg", "by": "Popularis", "season": 2, "caption": "Ability trials" },
+    { "src": "images/explore_items.jpg",     "by": "Popularis", "season": 2, "caption": "Legendary items" },
+    { "src": "images/explore_lore.jpg",      "by": "Popularis", "season": 2, "caption": "The world before the Sundering" },
+    { "src": "images/explore_season1.jpg",   "by": "Popularis", "season": 1, "caption": "Season 1 - the origin" },
+    { "src": "images/explore_seasons.jpg",   "by": "Popularis", "season": 1, "caption": "The early archipelago" },
+    { "src": "images/explore_season3.jpg",   "by": "Popularis", "season": 3, "caption": "Season 3 - in development" }
+]
+</script>
+
+<h1>Gallery</h1>
+
+<p class="season-intro">
+    Screenshots from everyone who plays. Click any picture to see it full size,
+    and use the arrow keys to flick through.
+</p>
+
+<div class="gallery-filters" id="gallery-filters"></div>
+
+<div class="gallery gallery-page" id="gallery-grid"></div>
+
+<p class="gallery-empty" id="gallery-empty" hidden>No pictures match that filter yet.</p>
+
+<p class="gallery-howto">
+    Got a good screenshot? Send it to Jackson and it'll go up here.
+</p>

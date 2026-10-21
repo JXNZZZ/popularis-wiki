@@ -70,31 +70,32 @@ Successfully integrated a fully interactive 3D map into the website by:
 - Configuring SPA routing
 - Making the setup portable
 
-help me - i am 17 hours into implimentation. 
+help me - i am 17 hours into implimentation.
+
+UPDATE: the map no longer needs the Java server. tools/export-map.mjs turns
+MAP-RENDER/web into a folder that works on GitHub Pages (a small service
+worker unpacks the .gz tiles in the browser). See MAP-RENDER/github-pages/README.md.
+The map address is the data-map-src below.
 -->
 
 
 
-<h1 class="center-title fade-in">LOCATIONS &amp; POIs</h1>
+<h1>Locations &amp; POIs</h1>
 
-<p class="season-intro fade-in">
-    Explore the world of Popularis in full 3D. Pan, zoom, and fly across the islands
-    to find every point of interest.
+<p class="season-intro">
+    The Season 2 world in 3D. Drag to look around, scroll to zoom, and click the
+    markers for the points of interest.
 </p>
 
-<div class="season-summary fade-in map-frame">
-<iframe
-    src="http://localhost:8100/"
-    title="Interactive 3D map of Popularis"
-    style="width:100%; height:640px; border:none; border-radius:12px; background:rgba(0,0,0,0.4);"
-></iframe>
-
-<p class="setting-hint" style="text-align:center; margin-top:12px;">
-    Map offline? Start it with <strong>java -jar bluemap-cli.jar -w</strong> inside the MAP-RENDER folder.
-</p>
+<!-- the 3D map only loads when someone clicks it - it's big -->
+<div class="map-embed" data-map-src="https://jxnzzz.github.io/popularis-map/">
+    <picture>
+        <source srcset="images/map-preview.webp" type="image/webp">
+        <img src="images/map-preview.jpg" alt="Top-down view of the Season 2 map" width="640" height="640" loading="lazy" decoding="async">
+    </picture>
+    <button type="button" class="btn btn-primary map-load">Open the 3D map</button>
 </div>
 
-<!-- run: java -jar bluemap-cli.jar -w
-
-in the dir of map renderer (shift+r click) in terminal
-requires version java 26 (latest) to run!!! -->
+<p class="map-links">
+    <a class="map-full" href="https://jxnzzz.github.io/popularis-map/" target="_blank" rel="noopener">Open it full screen &#8599;</a>
+</p>

@@ -149,35 +149,31 @@
 
     <div class="content-box" id="content-box">
 
-        <div class="page-header">
-            <div class="page-brand">
-                <div class="page-title-group">
-                    <div id="breadcrumbs">Popularis</div>
-                    <h1 id="page-title" class="wiki-title">Home</h1>
+        <header class="topbar">
+            <a class="brand" data-page="about" href="#about" aria-label="Popularis Wiki home">
+                <div id="logo-wrapper">
+                    <div id="logo-tilt">
+                        <picture><source srcset="images/wiki_title.webp" type="image/webp"><img src="images/wiki_title.png" id="nav-logo" alt="Popularis Wiki" width="1024" height="300"></picture>
+                    </div>
                 </div>
-            </div>
+            </a>
+
+            <nav class="site-nav" aria-label="Main">
+                <ul>
+                    <li><a data-page="about" href="#about">Home</a></li>
+                    <li><a data-page="seasons" href="#seasons">Seasons</a></li>
+                    <li><a data-page="players" href="#players">Players</a></li>
+                    <li><a data-page="lore" href="#lore">Lore</a></li>
+                    <li><a data-page="achievements" href="#achievements">Advancements</a></li>
+                    <li><a data-page="settings" href="#settings">Options</a></li>
+                </ul>
+            </nav>
 
             <div id="search-bar">
-                <input id="search-input" type="search" placeholder="Search Popularis Wiki..." aria-label="Search wiki pages">
+                <input id="search-input" type="search" placeholder="Search" aria-label="Search wiki pages">
                 <div id="search-results" class="search-results"></div>
             </div>
-        </div>
-
-        <nav>
-            <div id="logo-wrapper">
-                <div id="logo-tilt">
-                    <picture><source srcset="images/wiki_title.webp" type="image/webp"><img src="images/wiki_title.png" id="nav-logo" alt="wiki logo" width="1024" height="300"></picture>
-                </div>
-            </div>
-
-            <ul class="fade-in">
-                <li><a data-page="about">Home</a></li>
-                <li><a data-page="seasons">Seasons</a></li>
-                <li><a data-page="players">Players</a></li>
-                <li><a data-page="settings">Options</a></li>
-            </ul>
-
-        </nav>
+        </header>
 
         <div id="content"></div>
 
@@ -195,6 +191,7 @@
                         <a data-page="seasons">Seasons</a>
                         <a data-page="players">Players</a>
                         <a data-page="lore">Lore</a>
+                        <a data-page="achievements">Advancements</a>
                         <a data-page="credits">Credits</a>
                     </nav>
                     <nav class="footer-col">
@@ -202,6 +199,7 @@
                         <a data-page="abilities">Abilities</a>
                         <a data-page="items">Legendary Items</a>
                         <a data-page="locations">Locations</a>
+                        <a data-page="gallery">Gallery</a>
                     </nav>
                     <nav class="footer-col">
                         <h4>Seasons</h4>

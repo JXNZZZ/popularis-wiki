@@ -67,7 +67,8 @@
         { id: "locations", page: "locations", icon: "&#128506;", title: "Cartographer",        desc: "Opened the interactive map" },
         { id: "credits",   page: "credits",   icon: "&#127916;", title: "Curtain Call",        desc: "Read the credits" },
         { id: "settings",  page: "settings",  icon: "&#9881;",   title: "Tinkerer",            desc: "Opened the settings" },
-        { id: "achhunt",   page: "achievements", icon: "&#127942;", title: "Achievement Hunter", desc: "Opened the achievements page" },
+        { id: "achhunt",   page: "achievements", icon: "&#127942;", title: "Achievement Hunter", desc: "Opened this page" },
+        { id: "gallery",   page: "gallery",   icon: "&#128247;", title: "Shutterbug",          desc: "Looked through the gallery" },
         { id: "fullstory", icon: "&#128220;", title: "The Full Story",      desc: "Visited all three seasons" },
         { id: "wanderer",  icon: "&#129517;", title: "Wiki Wanderer",       desc: "Explored 10 different pages" },
         { id: "socialite", icon: "&#127917;", title: "Socialite",           desc: "Visited 5 player pages" },
@@ -121,7 +122,7 @@
         var counter = document.getElementById("ach-count");
         if (counter) counter.textContent = done + " / " + ACHIEVEMENTS.length + " unlocked";
         var bar = document.getElementById("ach-bar-fill");
-        if (bar) bar.style.width = (done / ACHIEVEMENTS.length * 100).toFixed(0) + "%";
+        if (bar) bar.style.transform = "scaleX(" + (done / ACHIEVEMENTS.length).toFixed(3) + ")";
     }
     window.popRenderAchievements = renderAchievements;
 
@@ -351,6 +352,16 @@
         lastPage = p;
         updateParticleColour();
         checkAchievements(p);
+        if (p === "achievements") {
+            renderAchievements();
+            var reset = document.getElementById("ach-reset");
+            if (reset) reset.addEventListener("click", function () {
+                if (!confirm("Reset all your advancements on this browser?")) return;
+                writeArr("popularis_advancements", []);
+                writeArr("popularis_visited", ["achievements"]);
+                renderAchievements();
+            });
+        }
     }
     if (content) {
         new MutationObserver(onPage).observe(content, { childList: true });

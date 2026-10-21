@@ -18,7 +18,7 @@ const CACHE = "popularis-" + VERSION;
 const Q = "?v=" + VERSION;
 
 const PAGES = ["about", "seasons", "players", "lore", "abilities", "locations", "items",
-    "settings", "season1", "season2", "season3", "credits", "404"];
+    "settings", "season1", "season2", "season3", "credits", "achievements", "gallery", "404"];
 
 const PRECACHE = [
     "./",

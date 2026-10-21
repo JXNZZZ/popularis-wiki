@@ -546,7 +546,9 @@
         btn.id = "wiki-drawer-btn";
         btn.setAttribute("aria-label", "Browse categories");
         btn.innerHTML = "&#9776;";
-        document.body.appendChild(btn);
+        // lives at the start of the top bar (it used to float over the card)
+        var bar = document.querySelector(".topbar");
+        if (bar) bar.insertBefore(btn, bar.firstChild); else document.body.appendChild(btn);
 
         var panel = document.createElement("aside");
         panel.id = "wiki-drawer";
@@ -638,6 +640,125 @@
     /* ==================================================
        run everything for a page
     ================================================== */
+    /* ==================================================
+       GALLERY PAGE (pages/gallery.html)
+       The picture list is a JSON block at the top of that page. The
+       deploy build makes small WebP thumbnails of everything in
+       images/gallery/ (images/gallery/thumbs/<name>.webp); locally, or
+       for anything else, the full image is used.
+    ================================================== */
+    function galleryThumb(src) {
+        var m = /^images\/gallery\/([^\/]+)\.(jpe?g|png|webp)$/i.exec(src);
+        if (m) return "images/gallery/thumbs/" + m[1] + ".webp";
+        if (/^images\/explore_[a-z0-9]+\.jpg$/.test(src)) return src.replace("images/", "images/thumbs/").replace(/\.jpg$/, ".webp");
+        return src;
+    }
+    function esc(t) {
+        return String(t == null ? "" : t).replace(/[&<>"]/g, function (c) {
+            return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+        });
+    }
+
+    function enhanceGalleryPage(scope, page) {
+        if (page !== "gallery") return;
+        var dataEl = scope.querySelector("#gallery-data");
+        var grid = scope.querySelector("#gallery-grid");
+        var bar = scope.querySelector("#gallery-filters");
+        var empty = scope.querySelector("#gallery-empty");
+        if (!dataEl || !grid || grid.dataset.wired) return;
+        grid.dataset.wired = "1";
+
+        var all;
+        try { all = JSON.parse(dataEl.textContent); }
+        catch (e) {
+            grid.innerHTML = '<p class="gallery-error">The picture list in pages/gallery.html has a typo ' +
+                "(usually a missing or extra comma): " + esc(e.message) + "</p>";
+            return;
+        }
+        all = all.filter(function (it) { return it && it.src; });
+
+        var filter = { season: "all", by: "all" };
+        var seasons = [], people = [];
+        all.forEach(function (it) {
+            if (it.season && seasons.indexOf(it.season) === -1) seasons.push(it.season);
+            if (it.by && people.indexOf(it.by) === -1) people.push(it.by);
+        });
+        seasons.sort(); people.sort();
+
+        if (bar) {
+            bar.innerHTML =
+                '<div class="gf-group">' +
+                    '<button type="button" class="gf-btn active" data-season="all">All (' + all.length + ")</button>" +
+                    seasons.map(function (n) {
+                        return '<button type="button" class="gf-btn" data-season="' + n + '">Season ' + n + "</button>";
+                    }).join("") +
+                "</div>" +
+                (people.length > 1
+                    ? '<label class="gf-by">Taken by <select id="gallery-by"><option value="all">Anyone</option>' +
+                      people.map(function (n) { return '<option value="' + esc(n) + '">' + esc(n) + "</option>"; }).join("") +
+                      "</select></label>"
+                    : "");
+            bar.addEventListener("click", function (e) {
+                var b = e.target.closest(".gf-btn");
+                if (!b) return;
+                filter.season = b.dataset.season;
+                bar.querySelectorAll(".gf-btn").forEach(function (x) { x.classList.toggle("active", x === b); });
+                render();
+            });
+            bar.addEventListener("change", function (e) {
+                if (e.target.id === "gallery-by") { filter.by = e.target.value; render(); }
+            });
+        }
+
+        var shown = [];
+        function render() {
+            shown = all.filter(function (it) {
+                return (filter.season === "all" || String(it.season) === filter.season) &&
+                       (filter.by === "all" || it.by === filter.by);
+            });
+            grid.innerHTML = shown.map(function (it, i) {
+                var th = galleryThumb(it.src);
+                return '<button type="button" class="gallery-item" data-i="' + i + '" aria-label="' + esc(it.caption || "Screenshot") + '">' +
+                    '<img src="' + esc(th) + '" data-full="' + esc(it.src) + '" alt="' + esc(it.caption || "") + '" loading="lazy" decoding="async" width="480" height="270">' +
+                    '<span class="gallery-cap">' + esc(it.caption || "") +
+                        (it.by ? '<em class="gallery-by">' + esc(it.by) + "</em>" : "") + "</span>" +
+                    "</button>";
+            }).join("");
+            if (empty) empty.hidden = shown.length > 0;
+        }
+        // no thumbnail yet (e.g. running locally before a deploy)? use the full image
+        grid.addEventListener("error", function (e) {
+            var im = e.target;
+            if (im.tagName === "IMG" && im.dataset.full && im.getAttribute("src") !== im.dataset.full) im.src = im.dataset.full;
+        }, true);
+        grid.addEventListener("click", function (e) {
+            var b = e.target.closest(".gallery-item");
+            if (!b) return;
+            lightbox.open(shown.map(function (it) {
+                return { src: it.src, cap: (it.caption || "") + (it.by ? "  —  taken by " + it.by : "") };
+            }), parseInt(b.dataset.i, 10) || 0);
+        });
+        render();
+    }
+
+    /* Locations: the BlueMap iframe is only created when asked for */
+    function enhanceMap(scope, page) {
+        if (page !== "locations") return;
+        var box = scope.querySelector(".map-embed");
+        if (!box || box.dataset.wired) return;
+        box.dataset.wired = "1";
+        box.addEventListener("click", function () {
+            if (box.querySelector("iframe")) return;
+            var f = document.createElement("iframe");
+            f.src = box.dataset.mapSrc;
+            f.title = "Interactive 3D map of Popularis";
+            f.allow = "fullscreen";
+            box.classList.add("loaded");
+            box.innerHTML = "";
+            box.appendChild(f);
+        });
+    }
+
     // `scope` may be a DETACHED fragment: router.js enhances the new page
     // before inserting it, so none of this costs layout or style work.
     function enhance(scope, page) {
@@ -654,6 +775,8 @@
         enhanceLinks(scope, page);
         enhanceRefs(scope, page);
         enhanceGallery(scope, page);   // after refs so it inserts above the panel
+        enhanceGalleryPage(scope, page);
+        enhanceMap(scope, page);
         enhanceLightbox(scope);        // after gallery so gallery imgs are skipped
         if (window._wikiMarkDrawer) window._wikiMarkDrawer();
     }
