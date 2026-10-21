@@ -74,7 +74,7 @@ help me - i am 17 hours into implimentation.
 
 UPDATE: the map no longer needs the Java server. tools/export-map.mjs turns
 MAP-RENDER/web into a folder that works on GitHub Pages (a small service
-worker unpacks the .gz tiles in the browser). See MAP-RENDER/github-pages/README.md.
+worker unpacks the .gz tiles in the browser). The export lives in the map/ folder (served at <site>/map/).
 The map address is the data-map-src below.
 -->
 
@@ -88,7 +88,7 @@ The map address is the data-map-src below.
 </p>
 
 <!-- the 3D map only loads when someone clicks it - it's big -->
-<div class="map-embed" data-map-src="https://jxnzzz.github.io/popularis-map/">
+<div class="map-embed" data-map-src="map/">
     <picture>
         <source srcset="images/map-preview.webp" type="image/webp">
         <img src="images/map-preview.jpg" alt="Top-down view of the Season 2 map" width="640" height="640" loading="lazy" decoding="async">
@@ -97,5 +97,5 @@ The map address is the data-map-src below.
 </div>
 
 <p class="map-links">
-    <a class="map-full" href="https://jxnzzz.github.io/popularis-map/" target="_blank" rel="noopener">Open it full screen &#8599;</a>
+    <a class="map-full" href="map/" target="_blank" rel="noopener">Open it full screen &#8599;</a>
 </p>

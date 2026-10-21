@@ -1,0 +1,2 @@
+# BlueMap export: binary tiles, never touch line endings
+map/** -text

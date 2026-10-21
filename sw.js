@@ -52,7 +52,9 @@ self.addEventListener("fetch", event => {
     const req = event.request;
     if (req.method !== "GET") return;
     const url = new URL(req.url);
-    if (url.origin !== self.location.origin) return;          // e.g. the BlueMap iframe
+    if (url.origin !== self.location.origin) return;
+    // the 3D map (map/) has its own service worker and is far too big to cache
+    if (url.pathname.startsWith(new URL("map/", self.registration.scope).pathname)) return;
 
     // page shell: network first (so deploys show immediately), but never
     // wait more than 3 s on a bad connection before using the cached copy.

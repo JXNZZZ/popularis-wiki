@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Popularis Map</title>
+    <style>
+        html, body { margin: 0; height: 100%; background: #0b0812; color: #cfc6b8;
+            font: 15px "Segoe UI", system-ui, sans-serif; display: grid; place-items: center; }
+    </style>
+</head>
+<body>
+    <p id="msg">Loading the map&hellip;</p>
+    <script>
+        (function () {
+            var msg = document.getElementById("msg");
+            var go = function () { location.replace("app.html" + location.search + location.hash); };
+            if (!("serviceWorker" in navigator) || !window.DecompressionStream) {
+                msg.textContent = "This browser is too old for the 3D map - try an up-to-date Chrome, Firefox, Edge or Safari.";
+                return;
+            }
+            // the wiki's own service worker also covers this folder, so check
+            // that it's specifically the map's tile unpacker in charge
+            var ours = function () {
+                var c = navigator.serviceWorker.controller;
+                return !!c && /bluemap-sw.js/.test(c.scriptURL);
+            };
+            if (ours()) return go();
+            navigator.serviceWorker.addEventListener("controllerchange", function () { if (ours()) go(); });
+            navigator.serviceWorker.register("bluemap-sw.js").then(function () {
+                return navigator.serviceWorker.ready;
+            }).then(function () {
+                setTimeout(function () { if (ours()) go(); else location.reload(); }, 600);
+            }).catch(function (e) { msg.textContent = "Couldn't start the map: " + e.message; });
+        })();
+    </script>
+</body>
+</html>

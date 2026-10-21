@@ -1,7 +1,7 @@
 // Turns the BlueMap render (MAP-RENDER/web) into a folder that works on
 // GitHub Pages - or any plain static host - with no Java server running.
 //
-//   node tools/export-map.mjs [outputFolder]      (default: MAP-RENDER/github-pages)
+//   node tools/export-map.mjs [outputFolder]      (default: map/  - served at <site>/map/)
 //
 // Why this is needed: BlueMap saves its 3D tiles gzip-compressed (*.prbm.gz)
 // and expects a web server that unpacks them on the fly and answers
@@ -9,13 +9,12 @@
 // either. So the export adds a tiny service worker (bluemap-sw.js) that does
 // both jobs inside the visitor's browser.
 //
-// Re-run this after every re-render, then push the output folder to the map's
-// GitHub repo. Full steps: README.md in the output folder.
+// Re-run this after every re-render, then commit + push the map/ folder.
 import { cpSync, rmSync, mkdirSync, readFileSync, writeFileSync, existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 const SRC = join("MAP-RENDER", "web");
-const OUT = process.argv[2] || join("MAP-RENDER", "github-pages");
+const OUT = process.argv[2] || "map";
 if (!existsSync(join(SRC, "index.html"))) {
     console.error("No BlueMap render found in " + SRC + " (run  java -jar bluemap-cli.jar -r  in MAP-RENDER first).");
     process.exit(1);
@@ -43,8 +42,10 @@ writeFileSync(settingsPath, JSON.stringify(settings));
 let app = readFileSync(join(OUT, "index.html"), "utf8");
 app = app.replace("<head>", `<head>
         <script>
-            // opened directly without the tile unpacker? go through the loader
-            if (!navigator.serviceWorker || !navigator.serviceWorker.controller)
+            // opened without the tile unpacker in charge? go through the loader.
+            // (checks it's OUR worker: the wiki's own worker also covers this folder)
+            var c = navigator.serviceWorker && navigator.serviceWorker.controller;
+            if (!c || !/bluemap-sw\.js/.test(c.scriptURL))
                 location.replace("index.html" + location.search + location.hash);
         </script>`);
 app = app.replace("<title>BlueMap</title>", "<title>Popularis Map</title>");
@@ -71,12 +72,18 @@ writeFileSync(join(OUT, "index.html"), `<!DOCTYPE html>
                 msg.textContent = "This browser is too old for the 3D map - try an up-to-date Chrome, Firefox, Edge or Safari.";
                 return;
             }
-            if (navigator.serviceWorker.controller) return go();
-            navigator.serviceWorker.addEventListener("controllerchange", go);
+            // the wiki's own service worker also covers this folder, so check
+            // that it's specifically the map's tile unpacker in charge
+            var ours = function () {
+                var c = navigator.serviceWorker.controller;
+                return !!c && /bluemap-sw\.js/.test(c.scriptURL);
+            };
+            if (ours()) return go();
+            navigator.serviceWorker.addEventListener("controllerchange", function () { if (ours()) go(); });
             navigator.serviceWorker.register("bluemap-sw.js").then(function () {
                 return navigator.serviceWorker.ready;
             }).then(function () {
-                setTimeout(function () { if (navigator.serviceWorker.controller) go(); else location.reload(); }, 400);
+                setTimeout(function () { if (ours()) go(); else location.reload(); }, 600);
             }).catch(function (e) { msg.textContent = "Couldn't start the map: " + e.message; });
         })();
     </script>
@@ -121,18 +128,13 @@ writeFileSync(join(OUT, ".nojekyll"), "");   // GitHub Pages must not skip any f
 writeFileSync(join(OUT, "README.md"), `# Popularis Map
 
 The 3D BlueMap of the Popularis world, set up to run on GitHub Pages
-(no Java server needed). The wiki's Locations page shows it in a frame.
+(no Java server needed). The wiki's Locations page shows it in a frame,
+and it's also at <site>/map/ on its own.
 
-## Updating the map
-1. Re-render in \`MAP-RENDER\`:  \`java -jar bluemap-cli.jar -r\`
-2. In the wiki folder run:  \`node tools/export-map.mjs\`
-3. Copy everything from \`MAP-RENDER/github-pages\` into this repo and push.
-
-## First-time setup
-1. Create a new public GitHub repo called \`popularis-map\`.
-2. Push the contents of this folder to it.
-3. Repo Settings -> Pages -> Source: "Deploy from a branch", branch \`main\`, folder \`/ (root)\`.
-4. After a minute it's live at https://<your-username>.github.io/popularis-map/
+THIS FOLDER IS GENERATED - don't edit it by hand. To update the map:
+1. Re-render in MAP-RENDER:  java -jar bluemap-cli.jar -r
+2. In the wiki folder run:   node tools/export-map.mjs
+3. Commit and push.
 `);
 
 const count = (function walk(d) { let n = 0; for (const f of readdirSync(d, { withFileTypes: true })) n += f.isDirectory() ? walk(join(d, f.name)) : 1; return n; })(OUT);
