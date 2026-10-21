@@ -60,10 +60,10 @@
     // `desc` = plain-English "what you did" (shown in the toast AND on the
     // achievements page)
     var ACHIEVEMENTS = [
-        { id: "players",   page: "players",   icon: "&#128101;", title: "Meet the Cast",       desc: "Visited the Players portal" },
-        { id: "lore",      page: "lore",      icon: "&#128214;", title: "Lore Master",         desc: "Read the World Lore" },
-        { id: "abilities", page: "abilities", icon: "&#9889;",   title: "Power Player",        desc: "Studied the player abilities" },
-        { id: "items",     page: "items",     icon: "&#128142;", title: "Treasure Hunter",     desc: "Browsed the Legendary Items" },
+        { id: "players",   page: "players",   icon: "&#128101;", title: "Meet the Cast",       desc: "Opened the players page" },
+        { id: "lore",      page: "lore",      icon: "&#128214;", title: "Lore Master",         desc: "Read the lore" },
+        { id: "abilities", page: "abilities", icon: "&#9889;",   title: "Power Player",        desc: "Checked out everyone's abilities" },
+        { id: "items",     page: "items",     icon: "&#128142;", title: "Treasure Hunter",     desc: "Looked at the legendary items" },
         { id: "locations", page: "locations", icon: "&#128506;", title: "Cartographer",        desc: "Opened the interactive map" },
         { id: "credits",   page: "credits",   icon: "&#127916;", title: "Curtain Call",        desc: "Read the credits" },
         { id: "settings",  page: "settings",  icon: "&#9881;",   title: "Tinkerer",            desc: "Opened the settings" },

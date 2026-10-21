@@ -4847,3 +4847,101 @@ html.gfx-low .mc-head { animation: none; }
 
 .hero-quotes .quote-card::before { content: none; }
 .hero-quotes .quote-card { padding-left: 20px; }
+
+/* ---------- home stat boxes: each shows something real from the wiki ---------- */
+.stat-strip .stat {
+    flex: 1 1 150px;
+    max-width: 200px;
+    height: 104px;
+    text-decoration: none;
+    overflow: hidden;
+    cursor: pointer;
+}
+.stat-strip .stat span { top: 8px; left: 10px; }
+.stat-strip .stat b { right: 10px; bottom: 6px; z-index: 1; }
+.stat-art {
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+    height: 46px;
+    display: flex;
+    align-items: flex-end;
+}
+.stat-art i { display: block; }
+
+/* players: three faces, overlapping */
+.art-heads i {
+    width: 34px;
+    height: 34px;
+    margin-right: -9px;
+    image-rendering: pixelated;
+    background-image: var(--skin), var(--skin), url("skins/placeholder.png");
+    background-size: 800% 800%;
+    background-position: 71.4286% 14.2857%, 14.2857% 14.2857%, 14.2857% 14.2857%;
+    outline: 2px solid #120d18;
+    box-shadow: 0 3px 0 rgba(0, 0, 0, 0.5);
+    transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.stat:hover .art-heads i:nth-child(1) { transform: translate(-3px, -4px) rotate(-8deg); }
+.stat:hover .art-heads i:nth-child(2) { transform: translateY(-7px); }
+.stat:hover .art-heads i:nth-child(3) { transform: translate(3px, -4px) rotate(8deg); }
+
+/* seasons: three little cover cards, fanned out */
+.art-cards i {
+    width: 40px;
+    height: 30px;
+    margin-right: -14px;
+    background: var(--img) center / cover;
+    border: 2px solid #120d18;
+    box-shadow: 0 3px 0 rgba(0, 0, 0, 0.5);
+    transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.art-cards i:nth-child(1) { transform: rotate(-8deg); }
+.art-cards i:nth-child(3) { transform: rotate(8deg); }
+.stat:hover .art-cards i:nth-child(1) { transform: translateX(-6px) rotate(-14deg); }
+.stat:hover .art-cards i:nth-child(2) { transform: translateY(-6px); }
+.stat:hover .art-cards i:nth-child(3) { transform: translateX(6px) rotate(14deg); }
+
+/* titans: a lava block and a leaf block */
+.art-titans i {
+    width: 32px;
+    height: 32px;
+    margin-right: 6px;
+    image-rendering: pixelated;
+    border: 2px solid #120d18;
+    box-shadow: 0 3px 0 rgba(0, 0, 0, 0.5), inset -4px -4px 0 rgba(0, 0, 0, 0.25), inset 4px 4px 0 rgba(255, 255, 255, 0.15);
+    transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.art-titans .fire {
+    background:
+        linear-gradient(90deg, transparent 50%, rgba(255, 230, 120, 0.55) 50% 75%, transparent 75%) 0 0 / 16px 16px,
+        linear-gradient(0deg, #ff6a1a, #ffb02e);
+}
+.art-titans .life {
+    background:
+        linear-gradient(90deg, transparent 50%, rgba(10, 60, 20, 0.45) 50% 75%, transparent 75%) 0 8px / 16px 16px,
+        linear-gradient(0deg, #2e8b3a, #5ccf5a);
+}
+.stat:hover .art-titans .fire { transform: translateY(-5px) rotate(-8deg); }
+.stat:hover .art-titans .life { transform: translateY(-5px) rotate(8deg); }
+
+/* locations: a piece of the actual map */
+.art-map {
+    width: 74px;
+    height: 46px;
+    background: url("images/map-preview.jpg") 30% 20% / 220% auto;
+    border: 2px solid #120d18;
+    box-shadow: 0 3px 0 rgba(0, 0, 0, 0.5);
+    transition: background-position 0.6s ease, transform 0.18s ease;
+}
+.stat:hover .art-map { transform: translateY(-3px) rotate(-2deg); }
+
+@media (max-width: 760px) {
+    .stat-strip { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .stat-strip .stat { max-width: none; }
+}
+
+/* player heads: one tidy row, all level (no out-of-step bobbing) */
+.hero-heads { display: grid; grid-template-columns: repeat(17, minmax(0, 40px)); gap: 7px; justify-content: start; }
+.mc-head { --s: auto; width: auto; height: auto; aspect-ratio: 1; animation: none; }
+@media (max-width: 760px) { .hero-heads { grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 6px; } }

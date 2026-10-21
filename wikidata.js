@@ -171,23 +171,23 @@ window.WIKI = (function () {
        citations. page => internal link, href => external)
     -------------------------------------------------- */
     const DEFAULT_REFERENCES = [
-        { label: "Volcanic Lore Books I–V", page: "lore",      note: "In-world primary source" },
+        { label: "Volcanic Lore Books I–V", page: "lore",      note: "Found on the volcanic island" },
         { label: "Interactive World Map",   page: "locations", note: "BlueMap render of the islands" },
         { label: "Season 2 — event structure", page: "season2", note: "Phases, teams and rules" }
     ];
 
     const REFERENCES = {
-        about:     [{ label: "Seasons overview", page: "seasons", note: "Every chapter of Popularis" }],
+        about:     [{ label: "Seasons overview", page: "seasons", note: "All of them so far" }],
         seasons:   [{ label: "World Lore", page: "lore", note: "Why the islands exist" }],
-        players:   [{ label: "Player abilities", page: "abilities", note: "Powers & origins" }],
-        abilities: [{ label: "Ability trial locations", page: "locations", note: "Where powers are found" },
-                    { label: "Legendary Items", page: "items", note: "Relic-bound powers" }],
-        items:     [{ label: "Ignivar's Gauntlet questline", page: "lore", note: "The three-riddle chain" }],
+        players:   [{ label: "Player abilities", page: "abilities", note: "Who can do what" }],
+        abilities: [{ label: "Ability trial locations", page: "locations", note: "Where to find them" },
+                    { label: "Legendary Items", page: "items", note: "The best gear" }],
+        items:     [{ label: "Ignivar's Gauntlet questline", page: "lore", note: "Three riddles to get it" }],
         locations: [{ label: "World Lore & Timeline", page: "lore", note: "The Sundering's scars" }],
         lore:      [{ label: "Legendary Items", page: "items", note: "Titan-forged relics" }],
-        season1:   [{ label: "Season 2", page: "season2", note: "The sequel event" }],
+        season1:   [{ label: "Season 2", page: "season2", note: "What came next" }],
         season2:   [{ label: "World Lore", page: "lore", note: "Titan backstory" }],
-        season3:   [{ label: "Season 2", page: "season2", note: "The preceding event" }]
+        season3:   [{ label: "Season 2", page: "season2", note: "The one before" }]
     };
 
     function refsFor(page) {
